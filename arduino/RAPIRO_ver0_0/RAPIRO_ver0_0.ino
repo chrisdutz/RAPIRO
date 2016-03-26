@@ -231,14 +231,13 @@ void loop()  {
       while(!Serial.available()){}
       switch(Serial.read()) {
         case 'M':
-          buf = readOneDigit();
+          /*buf = readOneDigit();
           if(buf != ERR){
-            valbuf = buf *10;
-            buf = readOneDigit();
-            if(buf != ERR) {
-              valbuf += buf;
-              if(0 <= valbuf && valbuf < MAXMN) {
-                motionNumber = valbuf;
+            valbuf = buf *10;*/
+            motionNumber = readOneDigit();
+            if(motionNumber != ERR) {
+              /*valbuf += buf;*/
+              if(0 <= motionNumber && motionNumber < MAXMN) {
                 cpMotion(motionNumber);
                 mode = 'M';
 
@@ -253,10 +252,10 @@ void loop()  {
                             motionNumber = 0;
                             Serial.println("#EM");
             }
-          } else {
+          /*} else {
                       motionNumber = 0;
                       Serial.println("#EM");
-          }
+          }*/
 
         break;
         case 'P':

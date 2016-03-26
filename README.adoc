@@ -1,5 +1,4 @@
-Rapiro firmware
-===============
+= Rapiro firmware
 ##The difference between default sample firmware and  this firmware. 
  1. Motion No. is 2 digits #Mnn. (evilbluechickens-san ) 
  2. Added Servo off command #H. (evilbluechickens-san )
@@ -25,3 +24,11 @@ Rapiro firmware
 |M8     | #M8   | #M08 |
 |M9     | #M9   | #M09 |
 |M10    | -     | #M10 |
+
+= Running the Server
+
+In order to run the server, the following command should work:
+
+----
+java -Djava.library.path=/usr/lib/java -jar rapiro-server-core-1.0.0-SNAPSHOT-exec.war
+----

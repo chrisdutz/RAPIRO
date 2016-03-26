@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!--
+  Created by christoferdutz on 08.09.15.
+-->
+<local:Object xmlns:fx="http://ns.adobe.com/mxml/2009"
+              xmlns:services="de.codecentric.iot.rapiro.services.*"
+              xmlns:local="*">
+
+    <fx:Declarations>
+        <services:SettingsService/>
+    </fx:Declarations>
+
+    <fx:Script>
+        <![CDATA[
+        public static const baseUrl:String = CONFIG::baseUrl;
+        ]]>
+    </fx:Script>
+
+</local:Object>

@@ -1,0 +1,21 @@
+== MRAA Helper
+
+This module is intended for deploying Maven bundles of the IOTDK libs (AKA MRAA).
+You actually only need to run it once and it will download and unpack the latest version
+and deploy the artifacts to a remote Maven repository.
+
+In order to do this, you need to
+
+----
+mvn deploy -Dremote-repo.url=<url of the repo> -Dremote-repo.id=<id of the repo>
+----
+
+After that the Maven artifact mraa should be available:
+
+----
+    <dependency>
+        <groupId>com.intel.iotdk</groupId>
+        <artifactId>mraa</artifactId>
+        <version>2.0.0-SNAPSHOT</version>
+    </dependency>
+----

@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<!--
+  Created by christoferdutz on 19.05.15.
+-->
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009"
+        xmlns:s="library://ns.adobe.com/flex/spark"
+        title="{resourceManager.getString('rapiro', 'main.title')}">
+
+    <fx:Metadata>
+        [ResourceBundle("rapiro")]
+    </fx:Metadata>
+
+    <fx:Declarations>
+        <s:RemoteObject id="movementService"
+                        destination="movementService"
+                        endpoint="http://edison.local:8080/messagebroker/short-polling-amf"
+                        fault="onFault(event)">
+            <s:method name="stop" result="onResult(event)"/>
+            <s:method name="moveForward" result="onResult(event)"/>
+            <s:method name="moveLeft" result="onResult(event)"/>
+            <s:method name="moveRight" result="onResult(event)"/>
+            <s:method name="moveBack" result="onResult(event)"/>
+        </s:RemoteObject>
+    </fx:Declarations>
+
+    <fx:Script>
+        <![CDATA[
+        import mx.rpc.events.FaultEvent;
+        import mx.rpc.events.ResultEvent;
+
+        protected function onResult(event:ResultEvent):void {
+            trace("Result: " + event);
+        }
+
+        protected function onFault(event:FaultEvent):void {
+            trace("Fault: " + event);
+        }
+
+        protected function onForwardClick(event:MouseEvent):void {
+            movementService.moveForward();
+        }
+
+        protected function onStopClick(event:MouseEvent):void {
+            movementService.stop();
+        }
+
+        ]]>
+    </fx:Script>
+
+    <s:VGroup width="100%" height="100%" horizontalAlign="center" padding="20">
+        <s:Button click="onForwardClick(event)" label="Forward"/>
+        <s:Button click="onStopClick(event)" label="Stop"/>
+    </s:VGroup>
+
+</s:View>

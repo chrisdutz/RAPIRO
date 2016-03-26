@@ -1,0 +1,179 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>de.codecentric.iot.rapiro</groupId>
+        <artifactId>rapiro</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>rapiro-client</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>air</packaging>
+
+    <properties>
+        <base-url>http://edison.local</base-url>
+    </properties>
+
+    <build>
+        <sourceDirectory>src/main/flex</sourceDirectory>
+        <plugins>
+            <plugin>
+                <groupId>net.flexmojos.oss</groupId>
+                <artifactId>flexmojos-maven-plugin</artifactId>
+                <version>${flexmojos.version}</version>
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <id>default-package-air</id>
+                        <goals>
+                            <goal>package-air</goal>
+                        </goals>
+                    </execution>
+                    <!--
+                        Packaging for Android
+                    -->
+                    <!--execution>
+                        <id>package-android-captive</id>
+                        <goals>
+                            <goal>package-air</goal>
+                        </goals>
+                        <configuration>
+                            <targetPlatform>android</targetPlatform>
+                            <includeCaptiveRuntime>true</includeCaptiveRuntime>
+                            <classifier>captive</classifier>
+                        </configuration>
+                    </execution-->
+                    <!--
+                        Packaging for ios
+                    -->
+                    <!--execution>
+                        <id>package-ios</id>
+                        <goals>
+                            <goal>package-air</goal>
+                        </goals>
+                        <configuration>
+                            <targetPlatform>ios</targetPlatform>
+                            <iosPackagingType>ipa-debug</iosPackagingType>
+                            <storefile>${ios-certificate}</storefile>
+                            <storepass>${ios-password}</storepass>
+                            <iosProvisioningProfile>${ios-provisioning-profile}</iosProvisioningProfile>
+                            <-iosPlatformSdk>/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.4.sdk</iosPlatformSdk->
+                        </configuration>
+                    </execution-->
+                </executions>
+
+                <configuration>
+                    <debug>${debug}</debug>
+                    <storepass>flexmojos</storepass>
+                    <advancedTelemetry>true</advancedTelemetry>
+                    <localesCompiled>
+                        <locale>de_DE</locale>
+                        <locale>en_US</locale>
+                    </localesCompiled>
+                    <sourceFile>RapiroApplication.mxml</sourceFile>
+                    <defines>
+                        <property>
+                            <name>CONFIG::baseUrl</name>
+                            <value>"${base-url}"</value>
+                        </property>
+                        <!--property>
+                            <name>FEATURE::serverFavorites</name>
+                            <value>${feature.server-favorites}</value>
+                        </property>
+                        <property>
+                            <name>FEATURE::eventRating</name>
+                            <value>${feature.event-rating}</value>
+                        </property-->
+                    </defines>
+                    <!-- TODO: Check if things wotk without this -->
+                    <keepAs3Metadatas>
+                        <name>ManagedEvents</name>
+                        <name>MessageHandler</name>
+                    </keepAs3Metadatas>
+                </configuration>
+
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.flex</groupId>
+                        <artifactId>compiler</artifactId>
+                        <version>${flex.version}</version>
+                        <type>pom</type>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.adobe.air</groupId>
+                        <artifactId>compiler</artifactId>
+                        <version>${air.version}</version>
+                        <type>pom</type>
+                    </dependency>
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.flex</groupId>
+            <artifactId>framework</artifactId>
+            <version>${flex.version}</version>
+            <type>pom</type>
+        </dependency>
+
+        <!-- Add the components optimized for mobile use -->
+        <dependency>
+            <groupId>org.apache.flex.framework</groupId>
+            <artifactId>mobile</artifactId>
+            <version>${flex.version}</version>
+            <type>pom</type>
+        </dependency>
+
+        <!-- Add the default mobile skin -->
+        <dependency>
+            <groupId>org.apache.flex.framework.themes</groupId>
+            <artifactId>mobile</artifactId>
+            <version>${flex.version}</version>
+            <type>swc</type>
+            <scope>theme</scope>
+        </dependency>
+
+        <!-- Air runtime dependencies -->
+        <dependency>
+            <groupId>com.adobe.air</groupId>
+            <artifactId>framework</artifactId>
+            <version>${air.version}</version>
+            <type>pom</type>
+        </dependency>
+
+        <!-- IOC framework -->
+        <dependency>
+            <groupId>org.spicefactory</groupId>
+            <artifactId>parsley-flex</artifactId>
+            <version>3.0.0</version>
+            <type>swc</type>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.flex.flexunit</groupId>
+            <artifactId>flexunit-flex</artifactId>
+            <version>4.3.0-SNAPSHOT</version>
+            <type>swc</type>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <profiles>
+        <!--
+            Enabling this profile will make the application connect to localhost
+            instead of connecting to the official server.
+        -->
+        <profile>
+            <id>debug-localhost</id>
+            <properties>
+                <base-url>http://localhost:8080</base-url>
+            </properties>
+        </profile>
+    </profiles>
+
+</project>

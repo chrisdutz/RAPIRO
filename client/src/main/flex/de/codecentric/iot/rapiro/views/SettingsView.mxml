@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<!--
+  Created by christoferdutz on 14.07.15.
+-->
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009"
+        xmlns:s="library://ns.adobe.com/flex/spark"
+        xmlns:parsley="http://www.spicefactory.org/parsley"
+        title="{resourceManager.getString('rapiro', 'settings.title')}"
+        creationComplete="onCreationComplete(event)">
+
+    <fx:Metadata>
+        [ResourceBundle("rapiro")]
+    </fx:Metadata>
+
+    <fx:Declarations>
+        <parsley:FastInject>
+            <parsley:Inject property="settingsService" type="{SettingsService}" />
+        </parsley:FastInject>
+    </fx:Declarations>
+
+    <s:navigationContent>
+        <s:Button label="&lt;" click="onBackClicked(event)"/>
+    </s:navigationContent>
+
+    <fx:Script>
+        <![CDATA[
+        import de.codecentric.iot.rapiro.services.SettingsService;
+
+        import mx.events.FlexEvent;
+        import mx.logging.ILogger;
+        import mx.logging.Log;
+
+        import spark.components.RadioButton;
+
+        protected static var log:ILogger = Log.getLogger(getQualifiedClassName(SettingsView).replace("::", "."));
+
+        [Inject]
+        public var settingsService:SettingsService;
+
+        protected var languageButtons:Array;
+
+        protected function onCreationComplete(event:FlexEvent):void {
+            // Hide the settings action button.
+            for each(var button:Button in navigator.actionContent) {
+                if (button.name == "settingsButton") {
+                    button.visible = false;
+                }
+            }
+
+            languageButtons = [];
+            for each(var language:String in ["de_DE", "en_US"]) {
+                var languageButton:RadioButton = new RadioButton();
+                languageButton.label = resourceManager.getString('rapiro', 'language.' + language);
+                languageButton.value = language;
+                languageButton.selected = (language == resourceManager.localeChain[0]);
+                languageButton.addEventListener("change", onLanguageChange);
+                languageSelection.addElement(languageButton);
+                languageButtons.push(languageButton);
+            }
+        }
+
+        override protected function commitProperties():void {
+            super.commitProperties();
+
+            // Select the currently selected locale button.
+            for each(var languageButton:RadioButton in languageButtons) {
+                languageButton.selected = (languageButton.value == resourceManager.localeChain[0]);
+            }
+        }
+
+        protected function onBackClicked(event:MouseEvent):void {
+            // Un-hide the settings action button.
+            for each(var button:Button in navigator.actionContent) {
+                if (button.name == "settingsButton") {
+                    button.visible = true;
+                }
+            }
+            navigator.popView()
+        }
+
+        protected function onLanguageChange(event:Event):void {
+            var selectedLanguage:String = String(RadioButton(event.target).value);
+
+            resourceManager.localeChain = [selectedLanguage];
+            settingsService.selectedLanguage = String(selectedLanguage);
+
+            log.info("Changed language to: " + selectedLanguage);
+        }
+        ]]>
+    </fx:Script>
+
+    <s:Form width="100%">
+        <s:FormItem id="languageSelection"
+                    label="{resourceManager.getString('rapiro', 'settings.language')}:"
+                    width="300"/>
+    </s:Form>
+
+</s:View>
