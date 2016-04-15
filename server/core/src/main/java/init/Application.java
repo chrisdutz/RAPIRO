@@ -18,8 +18,10 @@ public class Application {
     static {
         try {
             System.loadLibrary("mraajava");
+            System.setProperty("mraa-loaded", "true");
         } catch (UnsatisfiedLinkError e) {
-            System.err.println("Native code library failed to load.");
+            //System.err.println("Native code library failed to load.");
+            System.setProperty("mraa-loaded", "false");
         }
     }
 
