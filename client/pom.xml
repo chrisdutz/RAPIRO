@@ -14,7 +14,7 @@
     <packaging>air</packaging>
 
     <properties>
-        <base-url>http://edison.local</base-url>
+        <base-url>http://192.168.42.1:8080</base-url>
     </properties>
 
     <build>

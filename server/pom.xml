@@ -14,8 +14,10 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>application</module>
         <module>core</module>
         <module>movement</module>
+        <module>voice</module>
     </modules>
 
     <dependencyManagement>
