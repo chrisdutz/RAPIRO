@@ -39,17 +39,17 @@ public class VoiceService implements ApplicationListener<ContextRefreshedEvent> 
         if(outputDevice != null) {
             System.out.println("Voice: Initialized");
         } else {
-            System.out.println("Voice: Failed Initializing");
+            System.out.println("Voice: Failed initializing");
         }
     }
 
     public void startSinging() {
-        System.out.println("Voice: Start Singing");
+        System.out.println("Voice: Start singing");
         playFile("/audio/minions-banana.wav");
     }
 
     public void stopSinging() {
-        System.out.println("Voice: Stop Singing");
+        System.out.println("Voice: Stop singing");
         if(currentClip != null) {
             currentClip.stop();
         }
@@ -88,6 +88,7 @@ public class VoiceService implements ApplicationListener<ContextRefreshedEvent> 
      * @param applicationEvent the spring {@link ContextRefreshedEvent} instance
      */
     public void onApplicationEvent(ContextRefreshedEvent applicationEvent) {
+        System.out.println("Voice: Play start sound");
         playFile("/audio/minions-hellow.wav");
     }
 
