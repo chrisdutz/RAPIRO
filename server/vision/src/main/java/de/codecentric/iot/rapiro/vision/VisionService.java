@@ -4,6 +4,7 @@ import de.codecentric.iot.rapiro.SystemMode;
 import de.codecentric.iot.rapiro.vision.model.Block;
 import de.codecentric.iot.rapiro.vision.model.ColorBlock;
 import mraa.Spi;
+import org.springframework.flex.remoting.RemotingDestination;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -14,10 +15,11 @@ import java.util.List;
  * Created by christoferdutz on 23.03.16.
  */
 @Service("visionService")
+@RemotingDestination
 public class VisionService {
 
     private static final int PIXY_START_WORD = 0xaa55;
-    private static final int PIXY_START_WORD_CC = 0xaa56;
+    private static final int PIXY_START_WORD_COLOR_BLOCK = 0xaa56;
     // Is is the 55 of the second byte of the first word
     // and aa of the first byte of the second word.
     private static final int PIXY_START_WORD_OUT_OF_SYNC = 0x55aa;
@@ -36,6 +38,10 @@ public class VisionService {
         }
     }
 
+    public List<Block> getBlocks() {
+        return blocks;
+    }
+
     /**
      * Update the vision data
      */
@@ -43,6 +49,7 @@ public class VisionService {
     public void updateVisionData() {
         if(spi != null) {
             int lastWord = 0xffff;
+            int readWords = 0;
             List<Block> curBlocks = null;
             while(true) {
                 int curWord = readWord();
@@ -57,36 +64,50 @@ public class VisionService {
                         if(syncByte == 0x0055) {
                             curWord = PIXY_START_WORD;
                         } else {
-                            curWord = PIXY_START_WORD_CC;
+                            curWord = PIXY_START_WORD_COLOR_BLOCK;
                         }
                     }
                 }
 
                 // If we read the normal start word twice, it's the start of a normal block.
                 if (lastWord == PIXY_START_WORD && curWord == PIXY_START_WORD) {
-                    if(curBlocks == null) {
-                        curBlocks = new ArrayList<>();
+                    Block block = readNormalBlock();
+                    if(block != null) {
+                        if(curBlocks == null) {
+                            curBlocks = new ArrayList<>();
+                        }
+                        curBlocks.add(block);
                     }
-                    curBlocks.add(readNormalBlock());
                 }
 
                 // If we read the normal start word followed by the color block start word,
                 // it's the start of a color block.
-                else if (lastWord == PIXY_START_WORD && curWord == PIXY_START_WORD_CC) {
-                    if(curBlocks == null) {
-                        curBlocks = new ArrayList<>();
+                else if (lastWord == PIXY_START_WORD && curWord == PIXY_START_WORD_COLOR_BLOCK) {
+                    Block block = readColorBlock();
+                    if(block != null) {
+                        if(curBlocks == null) {
+                            curBlocks = new ArrayList<>();
+                        }
+                        curBlocks.add(block);
                     }
-                    curBlocks.add(readColorBlock());
                 }
 
                 // We have finished reading a complete set of blocks.
                 else if((curBlocks != null) && !curBlocks.isEmpty()) {
                     blocks = curBlocks;
-                    System.out.println("Vision: detected " + blocks.size() + " blocks");
                     return;
                 }
 
+                // If we haven't read the start of a block for some bytes
+                // there probably is nothing, so we have to clear the list
+                if(readWords > 30) {
+                    blocks = null;
+                    return;
+                }
+
+                // Save the last read word and continue.
                 else {
+                    readWords++;
                     lastWord = curWord;
                 }
             }
@@ -114,6 +135,7 @@ public class VisionService {
     }
 
     private ColorBlock readColorBlock() {
+        // TODO: Implement this
         return new ColorBlock(0,0,0,0,0,0);
     }
 
