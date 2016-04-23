@@ -1,7 +1,6 @@
 package de.codecentric.iot.rapiro.movement;
 
-import de.codecentric.iot.rapiro.IotMode;
-import de.codecentric.iot.rapiro.MraaSystem;
+import de.codecentric.iot.rapiro.SystemMode;
 import mraa.Result;
 import mraa.Uart;
 import org.springframework.flex.remoting.RemotingDestination;
@@ -17,7 +16,7 @@ public class MovementService {
     private Uart uart;
 
     public MovementService() {
-        if(MraaSystem.getMode() == IotMode.REAL_MODE) {
+        if(SystemMode.isRealMode()) {
             uart = new Uart("/dev/ttyMFD1");
 
             if (uart.setBaudRate(57600) != Result.SUCCESS) {
