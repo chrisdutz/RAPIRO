@@ -28,6 +28,11 @@
             <artifactId>spring-flex-core</artifactId>
             <version>1.5.2.RELEASE</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.flex.blazeds</groupId>
+            <artifactId>flex-messaging-core</artifactId>
+            <version>4.7.3-SNAPSHOT</version>
+        </dependency>
 
         <!--
             IOT-DK Libs

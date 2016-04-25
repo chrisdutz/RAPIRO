@@ -14,6 +14,23 @@
                 <channel ref="shortPollingAmf"/>
             </default-channels>
         </service>
+        <service id="messaging-service" class="flex.messaging.services.MessageService">
+            <adapters>
+                <adapter-definition
+                        id="actionscript"
+                        class="flex.messaging.services.messaging.adapters.ActionScriptAdapter"
+                        default="true"/>
+                <!--adapter-definition
+                        id="spring-integation"
+                        class="org.springframework.flex.messaging.integration.IntegrationAdapter"
+                        default="true"/-->
+            </adapters>
+            <default-channels>
+                <channel ref="websocketAmf"/>
+                <channel ref="longPollingAmf"/>
+                <channel ref="shortPollingAmf"/>
+            </default-channels>
+        </service>
     </services>
 
     <channels>

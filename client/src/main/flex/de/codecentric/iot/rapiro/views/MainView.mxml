@@ -4,16 +4,32 @@
 -->
 <s:View xmlns:fx="http://ns.adobe.com/mxml/2009"
         xmlns:s="library://ns.adobe.com/flex/spark"
-        title="{resourceManager.getString('rapiro', 'main.title')}">
+        title="{resourceManager.getString('rapiro', 'main.title')}"
+        creationComplete="onCreationComplete(event)">
 
     <fx:Metadata>
         [ResourceBundle("rapiro")]
     </fx:Metadata>
 
     <fx:Declarations>
+        <s:ChannelSet id="channelSet">
+            <s:StreamingAMFChannel id="streamingChannel"
+                                   connectTimeout="5"
+                                   url="http://localhost:8080/messagebroker/websocket-amf"/>
+            <s:AMFChannel id="longPollingChannel"
+                          pollingEnabled="true"
+                          piggybackingEnabled="true"
+                          pollingInterval="1000"
+                          url="http://localhost:8080/messagebroker/long-polling-amf"/>
+            <s:AMFChannel id="shortPollingChannel"
+                          pollingEnabled="true"
+                          piggybackingEnabled="true"
+                          pollingInterval="1000"
+                          url="http://localhost:8080/messagebroker/short-polling-amf"/>
+        </s:ChannelSet>
         <s:RemoteObject id="movementService"
                         destination="movementService"
-                        endpoint="{baseUrl}/messagebroker/short-polling-amf"
+                        channelSet="{channelSet}"
                         fault="onFault(event)">
             <s:method name="stop" result="onResult(event)"/>
             <s:method name="moveForward" result="onResult(event)"/>
@@ -23,25 +39,46 @@
         </s:RemoteObject>
         <s:RemoteObject id="voiceService"
                         destination="voiceService"
-                        endpoint="{baseUrl}/messagebroker/short-polling-amf"
+                        channelSet="{channelSet}"
                         fault="onFault(event)">
             <s:method name="startSinging" result="onResult(event)"/>
             <s:method name="stopSinging" result="onResult(event)"/>
         </s:RemoteObject>
+        <s:Consumer id="visionEvents"
+                    destination="visionEvents"
+                    channelSet="{channelSet}"
+                    fault="onMessageFault(event)"
+                    message="onVisionEvent(event)"/>
     </fx:Declarations>
 
     <fx:Script>
         <![CDATA[
+        import de.codecentric.iot.rapiro.vision.model.Block;
+        import de.codecentric.iot.rapiro.vision.model.ColorBlock;
+
+        import mx.collections.ArrayCollection;
+
+        import mx.events.FlexEvent;
+        import mx.messaging.events.MessageEvent;
+        import mx.messaging.events.MessageFaultEvent;
         import mx.rpc.events.FaultEvent;
         import mx.rpc.events.ResultEvent;
 
         public static const baseUrl:String = CONFIG::baseUrl;
+
+        protected function onCreationComplete(event:FlexEvent):void {
+            visionEvents.subscribe();
+        }
 
         protected function onResult(event:ResultEvent):void {
             trace("Result: " + event);
         }
 
         protected function onFault(event:FaultEvent):void {
+            trace("Fault: " + event);
+        }
+
+        protected function onMessageFault(event:MessageFaultEvent):void {
             trace("Fault: " + event);
         }
 
@@ -71,6 +108,18 @@
 
         protected function onStopSingingClick(event:MouseEvent):void {
             voiceService.stopSinging();
+        }
+
+        protected function onVisionEvent(event:MessageEvent):void {
+            if(event.message.body is ArrayCollection) {
+                var blocks:ArrayCollection = ArrayCollection(event.message.body);
+                trace("Got Blocks: " + blocks.length);
+                for each(var block:Block in blocks) {
+                    trace(" - Block: " + block);
+                }
+            } else {
+                trace("Other: " + event);
+            }
         }
 
         ]]>

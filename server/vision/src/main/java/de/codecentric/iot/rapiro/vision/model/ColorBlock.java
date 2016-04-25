@@ -7,6 +7,10 @@ public class ColorBlock extends Block {
 
     private int angle;
 
+    public ColorBlock() {
+        // Needed for BlazeDS
+    }
+
     public ColorBlock(int signature, int x, int y, int width, int height, int angle) {
         super(signature, x, y, width, height);
         this.angle = angle;
@@ -14,6 +18,10 @@ public class ColorBlock extends Block {
 
     public int getAngle() {
         return angle;
+    }
+
+    public void setAngle(int angle) {
+        this.angle = angle;
     }
 
     @Override

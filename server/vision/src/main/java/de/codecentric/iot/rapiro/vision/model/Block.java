@@ -9,6 +9,10 @@ public class Block {
     private int x, y;
     private int width, height;
 
+    public Block() {
+        // Needed for BlazeDS
+    }
+
     public Block(int signature, int x, int y, int width, int height) {
         this.signature = signature;
         this.x = x;
@@ -21,20 +25,40 @@ public class Block {
         return signature;
     }
 
+    public void setSignature(int signature) {
+        this.signature = signature;
+    }
+
     public int getX() {
         return x;
+    }
+
+    public void setX(int x) {
+        this.x = x;
     }
 
     public int getY() {
         return y;
     }
 
+    public void setY(int y) {
+        this.y = y;
+    }
+
     public int getWidth() {
         return width;
     }
 
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
     public int getHeight() {
         return height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
     }
 
     @Override

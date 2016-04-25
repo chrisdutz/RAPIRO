@@ -14,7 +14,7 @@
     <packaging>air</packaging>
 
     <properties>
-        <base-url>http://192.168.42.1:8080</base-url>
+        <base-url>http://localhost:8080</base-url>
     </properties>
 
     <build>
@@ -26,6 +26,21 @@
                 <version>${flexmojos.version}</version>
                 <extensions>true</extensions>
                 <executions>
+                    <execution>
+                        <id>generate-sources</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <includeJavaClasses>
+                                <class>de.codecentric.iot.rapiro.vision.model.*</class>
+                            </includeJavaClasses>
+                            <templates>
+                                <base-bean-template>${basedir}/src/main/templates/beanBase.gsp</base-bean-template>
+                                <bean-template>${basedir}/src/main/templates/bean.gsp</bean-template>
+                            </templates>
+                        </configuration>
+                    </execution>
                     <execution>
                         <id>default-package-air</id>
                         <goals>
@@ -160,6 +175,14 @@
             <version>4.3.0-SNAPSHOT</version>
             <type>swc</type>
             <scope>test</scope>
+        </dependency>
+
+        <!-- Needed for code generation -->
+        <dependency>
+            <groupId>de.codecentric.iot.rapiro</groupId>
+            <artifactId>rapiro-server-vision</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

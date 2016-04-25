@@ -3,12 +3,18 @@ package de.codecentric.iot.rapiro.vision;
 import de.codecentric.iot.rapiro.SystemMode;
 import de.codecentric.iot.rapiro.vision.model.Block;
 import de.codecentric.iot.rapiro.vision.model.ColorBlock;
+import flex.messaging.Destination;
+import flex.messaging.MessageBroker;
 import mraa.Spi;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.flex.messaging.MessageTemplate;
 import org.springframework.flex.remoting.RemotingDestination;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -16,7 +22,9 @@ import java.util.List;
  */
 @Service("visionService")
 @RemotingDestination
-public class VisionService {
+public class VisionService implements InitializingBean {
+
+    private static final String SERVICE_DESTINATION = "visionEvents";
 
     private static final int PIXY_START_WORD = 0xaa55;
     private static final int PIXY_START_WORD_COLOR_BLOCK = 0xaa56;
@@ -24,6 +32,11 @@ public class VisionService {
     // and aa of the first byte of the second word.
     private static final int PIXY_START_WORD_OUT_OF_SYNC = 0x55aa;
 
+    @Autowired
+    private MessageBroker broker;
+
+    @Autowired
+    private MessageTemplate template;
 
     private Spi spi;
 
@@ -38,8 +51,25 @@ public class VisionService {
         }
     }
 
+    /**
+     * Manually create a messaging destination 'visionEvents' for this service.
+     */
+    @Override
+    public void afterPropertiesSet() {
+        flex.messaging.services.Service service = broker.getService("messaging-service");
+        Destination visionEvents = service.createDestination(SERVICE_DESTINATION);
+        service.addDestination(visionEvents);
+        service.start();
+    }
+
     public List<Block> getBlocks() {
         return blocks;
+    }
+
+    private void setBlocks(List<Block> blocks) {
+        if(blocks != this.blocks) {
+            template.send(SERVICE_DESTINATION, blocks);
+        }
     }
 
     /**
@@ -94,14 +124,14 @@ public class VisionService {
 
                 // We have finished reading a complete set of blocks.
                 else if((curBlocks != null) && !curBlocks.isEmpty()) {
-                    blocks = curBlocks;
+                    setBlocks(curBlocks);
                     return;
                 }
 
                 // If we haven't read the start of a block for some bytes
                 // there probably is nothing, so we have to clear the list
                 if(readWords > 30) {
-                    blocks = null;
+                    setBlocks(null);
                     return;
                 }
 
@@ -111,6 +141,9 @@ public class VisionService {
                     lastWord = curWord;
                 }
             }
+        } else {
+            // Todo ... dummy.
+            setBlocks(Collections.singletonList(new Block(1, 2, 3, 4, 5)));
         }
     }
 
@@ -128,15 +161,23 @@ public class VisionService {
 
         if(checksum == signatureNumber + xCenter + yCenter + width + height) {
             return new Block(signatureNumber, xCenter, yCenter, width, height);
-        } else {
-            System.out.println("Vision: Invalid checksum");
         }
         return null;
     }
 
     private ColorBlock readColorBlock() {
-        // TODO: Implement this
-        return new ColorBlock(0,0,0,0,0,0);
+        int checksum = readWord();
+        int signatureNumber = readWord();
+        int xCenter = readWord();
+        int yCenter = readWord();
+        int width = readWord();
+        int height = readWord();
+        int angle = readWord();
+
+        if(checksum == signatureNumber + xCenter + yCenter + width + height + angle) {
+            return new ColorBlock(signatureNumber, xCenter, yCenter, width, height, angle);
+        }
+        return null;
     }
 
 }
