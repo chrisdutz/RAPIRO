@@ -26,6 +26,8 @@ public class VisionService implements InitializingBean {
 
     private static final String SERVICE_DESTINATION = "visionEvents";
 
+    private static final int MIN_BLOCK_SIZE = 20;
+
     private static final int PIXY_START_WORD = 0xaa55;
     private static final int PIXY_START_WORD_COLOR_BLOCK = 0xaa56;
     // Is is the 55 of the second byte of the first word
@@ -106,7 +108,9 @@ public class VisionService implements InitializingBean {
                         if(curBlocks == null) {
                             curBlocks = new ArrayList<>();
                         }
-                        curBlocks.add(block);
+                        if((block.getWidth() > MIN_BLOCK_SIZE) && (block.getHeight() > MIN_BLOCK_SIZE)) {
+                            curBlocks.add(block);
+                        }
                     }
                 }
 
@@ -118,7 +122,9 @@ public class VisionService implements InitializingBean {
                         if(curBlocks == null) {
                             curBlocks = new ArrayList<>();
                         }
-                        curBlocks.add(block);
+                        if((block.getWidth() > MIN_BLOCK_SIZE) && (block.getHeight() > MIN_BLOCK_SIZE)) {
+                            curBlocks.add(block);
+                        }
                     }
                 }
 

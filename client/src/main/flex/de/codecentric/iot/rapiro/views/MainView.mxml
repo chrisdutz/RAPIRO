@@ -13,9 +13,10 @@
 
     <fx:Declarations>
         <s:ChannelSet id="channelSet">
-            <s:StreamingAMFChannel id="streamingChannel"
-                                   connectTimeout="5"
-                                   url="http://localhost:8080/messagebroker/websocket-amf"/>
+            <!--s:StreamingAMFChannel id="streamingChannel"
+                          connectTimeout="5"
+                          requestTimeout="5"
+                          url="http://localhost:8080/messagebroker/websocket-amf"/>
             <s:AMFChannel id="longPollingChannel"
                           pollingEnabled="true"
                           piggybackingEnabled="true"
@@ -25,8 +26,23 @@
                           pollingEnabled="true"
                           piggybackingEnabled="true"
                           pollingInterval="1000"
-                          url="http://localhost:8080/messagebroker/short-polling-amf"/>
+                          url="http://localhost:8080/messagebroker/short-polling-amf"/-->
+            <s:StreamingAMFChannel id="streamingChannel"
+                                   connectTimeout="5"
+                                   requestTimeout="5"
+                                   url="http://10.10.56.132:8080/messagebroker/websocket-amf"/>
+            <s:AMFChannel id="longPollingChannel"
+                          pollingEnabled="true"
+                          piggybackingEnabled="true"
+                          pollingInterval="1000"
+                          url="http://10.10.56.132:8080/messagebroker/long-polling-amf"/>
+            <s:AMFChannel id="shortPollingChannel"
+                          pollingEnabled="true"
+                          piggybackingEnabled="true"
+                          pollingInterval="1000"
+                          url="http://10.10.56.132:8080/messagebroker/short-polling-amf"/>
         </s:ChannelSet>
+
         <s:RemoteObject id="movementService"
                         destination="movementService"
                         channelSet="{channelSet}"
@@ -37,6 +53,7 @@
             <s:method name="moveRight" result="onResult(event)"/>
             <s:method name="moveBack" result="onResult(event)"/>
         </s:RemoteObject>
+
         <s:RemoteObject id="voiceService"
                         destination="voiceService"
                         channelSet="{channelSet}"
@@ -44,6 +61,7 @@
             <s:method name="startSinging" result="onResult(event)"/>
             <s:method name="stopSinging" result="onResult(event)"/>
         </s:RemoteObject>
+
         <s:Consumer id="visionEvents"
                     destination="visionEvents"
                     channelSet="{channelSet}"
@@ -59,10 +77,14 @@
         import mx.collections.ArrayCollection;
 
         import mx.events.FlexEvent;
+        import mx.graphics.SolidColor;
+        import mx.graphics.SolidColorStroke;
         import mx.messaging.events.MessageEvent;
         import mx.messaging.events.MessageFaultEvent;
         import mx.rpc.events.FaultEvent;
         import mx.rpc.events.ResultEvent;
+
+        import spark.primitives.Rect;
 
         public static const baseUrl:String = CONFIG::baseUrl;
 
@@ -112,13 +134,21 @@
 
         protected function onVisionEvent(event:MessageEvent):void {
             if(event.message.body is ArrayCollection) {
+                // Clear all boxes.
+                vision.removeAllElements();
+
+                // Add new boxes for each detected object.
                 var blocks:ArrayCollection = ArrayCollection(event.message.body);
-                trace("Got Blocks: " + blocks.length);
                 for each(var block:Block in blocks) {
-                    trace(" - Block: " + block);
+                    var rect:Rect = new Rect();
+                    rect.stroke = new SolidColorStroke(0x000000);
+                    rect.fill = new SolidColor(0x00FF00);
+                    rect.x = block.x - (block.width / 2);
+                    rect.y = block.y - (block.height / 2);
+                    rect.width = block.width;
+                    rect.height = block.height;
+                    vision.addElement(rect);
                 }
-            } else {
-                trace("Other: " + event);
             }
         }
 
@@ -135,6 +165,19 @@
             </s:HGroup>
             <s:Button click="onBackClick(event)" label="Back"/>
         </s:VGroup>
+
+        <s:Group width="320" height="200">
+            <s:Rect width="100%" height="100%">
+                <s:stroke>
+                    <s:SolidColorStroke color="0x000000"/>
+                </s:stroke>
+            </s:Rect>
+            <s:Group id="vision" width="320" height="200">
+                <s:layout>
+                    <s:BasicLayout/>
+                </s:layout>
+            </s:Group>
+        </s:Group>
 
         <s:VGroup width="100%">
             <s:Button click="onStartSingingClick(event)" label="Start Singing"/>
