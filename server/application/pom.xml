@@ -46,14 +46,20 @@
     </build>
 
     <dependencies>
-        <!--
-            This will pull in and configure the servlet engine as
-            well as the BlazeDS server.
-        -->
         <dependency>
             <groupId>org.apache.flex.blazeds</groupId>
             <artifactId>blazeds-spring-boot-starter</artifactId>
             <version>4.7.3-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-core</artifactId>
+            <version>5.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>4.2.3.RELEASE</version>
         </dependency>
 
         <dependency>
@@ -75,12 +81,6 @@
             <groupId>de.codecentric.iot.rapiro</groupId>
             <artifactId>rapiro-server-voice</artifactId>
             <version>1.0.0-SNAPSHOT</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.activemq</groupId>
-            <artifactId>activemq-core</artifactId>
-            <version>5.7.0</version>
         </dependency>
     </dependencies>
 
