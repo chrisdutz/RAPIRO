@@ -1,6 +1,8 @@
 package de.codecentric.iot.rapiro.voice;
 
 import de.codecentric.iot.rapiro.SystemMode;
+import de.codecentric.iot.rapiro.voice.utils.SoundRecorder;
+import de.codecentric.iot.rapiro.voice.utils.WM8958;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.flex.remoting.RemotingDestination;
@@ -17,7 +19,9 @@ import java.io.InputStream;
 @RemotingDestination
 public class VoiceService implements ApplicationListener<ContextRefreshedEvent> {
 
+    private WM8958 wm8958;
     private Mixer.Info outputDevice;
+    private SoundRecorder recorder;
 
     private Clip currentClip;
 
@@ -37,6 +41,10 @@ public class VoiceService implements ApplicationListener<ContextRefreshedEvent> 
         }
 
         if(outputDevice != null) {
+            if(SystemMode.isRealMode()) {
+                wm8958 = new WM8958();
+                wm8958.reset();
+            }
             System.out.println("Voice: Initialized");
         } else {
             System.out.println("Voice: Failed initializing");
@@ -55,7 +63,7 @@ public class VoiceService implements ApplicationListener<ContextRefreshedEvent> 
         }
     }
 
-    protected void playFile(String filename) {
+    private void playFile(String filename) {
         if(currentClip != null) {
             currentClip.stop();
         }
@@ -90,6 +98,10 @@ public class VoiceService implements ApplicationListener<ContextRefreshedEvent> 
     public void onApplicationEvent(ContextRefreshedEvent applicationEvent) {
         System.out.println("Voice: Play start sound");
         playFile("/audio/minions-hellow.wav");
+
+        // TODO: Test recording...
+        /*recorder = new SoundRecorder();
+        recorder.record(outputDevice);*/
     }
 
 }
