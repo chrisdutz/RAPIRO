@@ -13,7 +13,7 @@
     <version>1.0.0-SNAPSHOT</version>
 
     <properties>
-        <iotdk.version>2.0.0-SNAPSHOT</iotdk.version>
+        <iotdk.version>2.0.0</iotdk.version>
         <remote-repo.url>define this</remote-repo.url>
         <remote-repo.id>define this</remote-repo.id>
     </properties>

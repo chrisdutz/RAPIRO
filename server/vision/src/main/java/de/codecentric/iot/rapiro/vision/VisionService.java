@@ -70,6 +70,7 @@ public class VisionService implements InitializingBean {
 
     private void setBlocks(List<Block> blocks) {
         if(blocks != this.blocks) {
+            this.blocks = blocks;
             template.send(SERVICE_DESTINATION, blocks);
         }
     }

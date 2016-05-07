@@ -32,3 +32,16 @@ In order to run the server, the following command should work:
 ----
 java -Djava.library.path=/usr/lib/java -jar rapiro-server-core-1.0.0-SNAPSHOT-exec.war
 ----
+
+= Setting up Telemetry
+
+In order to use access telemetry data, we need to install some native libraries on our system.
+The libs are all contained in the archive that can be downloaded from:
+https://sourceforge.net/projects/sigar/files/
+
+MAC:
+Copy the file "sigar-bin/lib/libsigar-universal64-macosx.dylib" to "/Library/Java/Extensions".
+I had to do a "sudo cp" as copying the normal way was blocked by the system.
+
+Edison:
+I have to fins out which lib I have to copy to "/usr/lib/java".

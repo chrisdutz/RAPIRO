@@ -17,6 +17,8 @@
         <module>application</module>
         <module>core</module>
         <module>movement</module>
+        <module>orientation</module>
+        <module>telemetry</module>
         <module>vision</module>
         <module>voice</module>
     </modules>

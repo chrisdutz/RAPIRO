@@ -13,7 +13,7 @@
 
     <fx:Declarations>
         <s:ChannelSet id="channelSet">
-            <!--s:StreamingAMFChannel id="streamingChannel"
+            <s:StreamingAMFChannel id="streamingChannel"
                           connectTimeout="5"
                           requestTimeout="5"
                           url="http://localhost:8080/messagebroker/websocket-amf"/>
@@ -26,21 +26,21 @@
                           pollingEnabled="true"
                           piggybackingEnabled="true"
                           pollingInterval="1000"
-                          url="http://localhost:8080/messagebroker/short-polling-amf"/-->
-            <s:StreamingAMFChannel id="streamingChannel"
+                          url="http://localhost:8080/messagebroker/short-polling-amf"/>
+            <!--s:StreamingAMFChannel id="streamingChannel"
                                    connectTimeout="5"
                                    requestTimeout="5"
-                                   url="http://10.10.56.132:8080/messagebroker/websocket-amf"/>
+                                   url="http://192.168.42.1:8080/messagebroker/websocket-amf"/>
             <s:AMFChannel id="longPollingChannel"
                           pollingEnabled="true"
                           piggybackingEnabled="true"
                           pollingInterval="1000"
-                          url="http://10.10.56.132:8080/messagebroker/long-polling-amf"/>
+                          url="http://192.168.42.1:8080/messagebroker/long-polling-amf"/>
             <s:AMFChannel id="shortPollingChannel"
                           pollingEnabled="true"
                           piggybackingEnabled="true"
                           pollingInterval="1000"
-                          url="http://10.10.56.132:8080/messagebroker/short-polling-amf"/>
+                          url="http://192.168.42.1:8080/messagebroker/short-polling-amf"/-->
         </s:ChannelSet>
 
         <s:RemoteObject id="movementService"
@@ -67,6 +67,12 @@
                     channelSet="{channelSet}"
                     fault="onMessageFault(event)"
                     message="onVisionEvent(event)"/>
+
+        <s:Consumer id="telemetryEvents"
+                    destination="telemetryEvents"
+                    channelSet="{channelSet}"
+                    fault="onMessageFault(event)"
+                    message="onTelemetryEvent(event)"/>
     </fx:Declarations>
 
     <fx:Script>
@@ -88,8 +94,12 @@
 
         public static const baseUrl:String = CONFIG::baseUrl;
 
+        [Bindable]
+        private var cpuLoad:Number;
+
         protected function onCreationComplete(event:FlexEvent):void {
             visionEvents.subscribe();
+            telemetryEvents.subscribe();
         }
 
         protected function onResult(event:ResultEvent):void {
@@ -133,7 +143,7 @@
         }
 
         protected function onVisionEvent(event:MessageEvent):void {
-            if(event.message.body is ArrayCollection) {
+            if (event.message.body is ArrayCollection) {
                 // Clear all boxes.
                 vision.removeAllElements();
 
@@ -150,6 +160,10 @@
                     vision.addElement(rect);
                 }
             }
+        }
+
+        protected function onTelemetryEvent(event:MessageEvent):void {
+            cpuLoad = Math.round(Number(event.message.body) * 100);
         }
 
         ]]>
@@ -178,6 +192,8 @@
                 </s:layout>
             </s:Group>
         </s:Group>
+
+        <s:Label text="{cpuLoad}"/>
 
         <s:VGroup width="100%">
             <s:Button click="onStartSingingClick(event)" label="Start Singing"/>
