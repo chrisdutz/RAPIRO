@@ -3,16 +3,16 @@ package de.codecentric.iot.rapiro.movement.model;
 /**
  * Created by christoferdutz on 03.05.16.
  */
-public class MovementState {
+public class MovementPosition {
 
     private int[] servoPositions;
     private int[] eyeColors;
     private int irDistance;
 
-    public MovementState() {
+    public MovementPosition() {
     }
 
-    public MovementState(int[] servoPositions, int[] eyeColors, int irDistance) {
+    public MovementPosition(int[] servoPositions, int[] eyeColors, int irDistance) {
         this.servoPositions = servoPositions;
         this.eyeColors = eyeColors;
         this.irDistance = irDistance;

@@ -18,20 +18,18 @@
             <artifactId>rapiro-server-core</artifactId>
             <version>1.0.0-SNAPSHOT</version>
         </dependency>
+
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
-            <version>4.2.3.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.flex</groupId>
             <artifactId>spring-flex-core</artifactId>
-            <version>1.5.2.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>org.apache.flex.blazeds</groupId>
             <artifactId>flex-messaging-core</artifactId>
-            <version>4.7.3-SNAPSHOT</version>
         </dependency>
 
         <!--
@@ -40,12 +38,10 @@
         <dependency>
             <groupId>com.intel.iotdk</groupId>
             <artifactId>mraa</artifactId>
-            <version>2.0.0</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
-            <version>1.10</version>
         </dependency>
     </dependencies>
 

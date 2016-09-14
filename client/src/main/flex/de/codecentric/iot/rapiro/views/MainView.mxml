@@ -13,7 +13,7 @@
 
     <fx:Declarations>
         <s:ChannelSet id="channelSet">
-            <s:StreamingAMFChannel id="streamingChannel"
+            <!--s:StreamingAMFChannel id="streamingChannel"
                           connectTimeout="5"
                           requestTimeout="5"
                           url="http://localhost:8080/messagebroker/websocket-amf"/>
@@ -26,8 +26,8 @@
                           pollingEnabled="true"
                           piggybackingEnabled="true"
                           pollingInterval="1000"
-                          url="http://localhost:8080/messagebroker/short-polling-amf"/>
-            <!--s:StreamingAMFChannel id="streamingChannel"
+                          url="http://localhost:8080/messagebroker/short-polling-amf"/-->
+            <s:StreamingAMFChannel id="streamingChannel"
                                    connectTimeout="5"
                                    requestTimeout="5"
                                    url="http://192.168.42.1:8080/messagebroker/websocket-amf"/>
@@ -40,7 +40,7 @@
                           pollingEnabled="true"
                           piggybackingEnabled="true"
                           pollingInterval="1000"
-                          url="http://192.168.42.1:8080/messagebroker/short-polling-amf"/-->
+                          url="http://192.168.42.1:8080/messagebroker/short-polling-amf"/>
         </s:ChannelSet>
 
         <s:RemoteObject id="movementService"

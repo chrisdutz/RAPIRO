@@ -1,0 +1,325 @@
+In the <a href="https://blog.codecentric.de/en/2016/01/my-first-rapiro-cyborg/">first part</a> of this Blog series, I showed you how to set up a Rapiro and remote-control him from an Intel Edison running on a special Edison carrier board.
+
+As I wanted my Rapiro to be able to react on its environment, I'll describe in the following what is needed in order to add:
+<ul>
+	<li>an IR distance sensor to prevent him from running into things and falling</li>
+	<li>an audio input and output interface</li>
+	<li>a camera for visually detecting objects</li>
+</ul>
+While the IR distance sensor will be connected to the Arduino, the audio and video interfaces will be connected to the Edison.
+
+The Edison carrier board exposes 3 busses which haven't been used yet:
+<ul>
+	<li><a href="https://de.wikipedia.org/wiki/I%C2%B2C" target="_blank">I2C</a>: Inter-Integrated Circuit</li>
+	<li><a href="https://de.wikipedia.org/wiki/Serial_Peripheral_Interface" target="_blank">SPI</a>: Serial Peripheral Interface</li>
+	<li><a href="https://de.wikipedia.org/wiki/I%C2%B2S" target="_blank">I2S</a>: Inter-IC Sound</li>
+</ul>
+I am going to use I2C and I2S for Sound and SPI for adding the video hardware.
+<h2>IR distance sensor</h2>
+In contrast to the audio and visual sensors, the IR distance sensor is connected to Rapiro's Arduino. If you haven't done so yet, you'll have to disassemble the little fellow till you can take out the Arduino board in order to solder in the Pins for connecting the IR sensor.
+
+The process of connecting the sensor is described quite well here:
+<a href="http://wiki.rapiro.com/page/installing_distance_sensor/" target="_blank">http://wiki.rapiro.com/page/installing_distance_sensor/</a>
+
+One little piece of information that they didn't mention on that page and that confused me quite a bit when writing my own firmware (we'll handle this in part 3) was that even if Rapiro is based on an Arduino Uno, which has 6 analog ports, Rapiro's board has 8 analog ports. A6 and A7 are exactly where the pins had to be soldered to. So if you connected the yellow cable the way shown on the picture of the installation guide, the sensor is available on A6, if you connected it to the other one, it's A7. In the end you could simply connect another analog sensor to the other analog port (good to know).
+
+The default firmware doesn't directly support the IR distance sensor. In order to get that working, I needed to update the Arduino sketch. In the Rapiro wiki they advertise the sketch of a user "oga00000001", but when using that sketch, you have to know that it uses two-digit motion numbers, so you have to use <code>#M01</code> instead of <code>#M1</code> and Rapiro didn't walk, but did some dangerous looking taiji-like moves instead. I decided to have a look at what he did to add analog IO and extended the original sketch with that.
+
+So we needed to add one command in order to output the analog value. In oga's sketch you needed to provide the number of the analog port. As I am only going to support one, I decided to omit the port number from the command and simply react on <code>#A</code> and output the value.
+
+In order to do this, I needed to extend the main command switch-statement with this extra case:
+<pre>case 'A':
+          aval = analogRead(6);
+          Serial.print("#A");
+          Serial.print(6);
+          Serial.print("V");
+          Serial.print(int(aval));
+          break;
+</pre>
+After updating the Arduino with the modified sketch, you should be able to get the value from the IR distance sensor by sending <code>#A</code>.
+<h2>Audio in and out</h2>
+Edison already comes with a DSP (Digital Signal Processor) that is able to handle audio output. This is able to produce a stream of PCM wave data. What it doesn't come with is a DAC (Digital Analog Converter) which produces an analog signal you could amplify and attach some speakers to. You could, however, connect a bluetooth or network speaker to it and be done with it, as these would take care of the rest.
+Using bluetooth or even WiFi to connect parts of the same device sort of sounds silly and probably uses a lot more power than a truly embedded solution.
+Edison comes with direct firmware support for a <a href="http://www.digchip.com/datasheets/parts/datasheet/526/WM8958-pdf.php" target="_blank">WM8958 audio codec</a>. Unfortunately this seems to be a real beast. I don't need 4 mic inputs, separate line in/out/headphones/stereo-speaker etc. This all needs room and energy. Both things I want to keep at a minimum. The WM8958 seems to have been intended for the use in mobile phones etc. The pricing of a developer board with this codec is $270-790$ ... I'm not going to pay that much just to make my buddy talk, so I'm looking for other solutions.
+Another option seems to be the <a href="http://www.cs.columbia.edu/~sedwards/classes/2008/4840/Wolfson-WM8731-audio-CODEC.pdf" target="_blank">WM8731 codec</a>, which offers one mic/line-in and a stereo out. I would have loved two mic inputs for some "Where did that sound come from?"-action, but I guess I'll have to forget about that for now. Unfortunately the one <a href="http://www.malinov.com/Home/sergeys-projects/audio-block-for-intel-edison" target="_blank">Edison audio-shield</a> using a WM8731 I could find is far too big for Rapiro's head and you have to manually solder SMD parts. But in general any solution based on a Wolfson WM8731 codec should do. However Sergey's blog was an invaluable source for information and Sergey was extremely responsive when I contacted him with some questions. Tank you very much for this, Sergey! I stumbled across the <a href="http://www.mikroe.com/add-on-boards/audio-voice/audio-codec-proto/" target="_blank">MIKROE-506</a> board which seems to use some of the interfaces exposed by the Edison carrier board. $19 for the circuit board and $20 for shipping and taxes ... YAY! ... sold!
+
+It turned out that you need to modify the <code>MIKRO-E</code> board a little in order to make things work. I2C needs one pair of pull-up resistors in order to work. Edison has some on the carrier board. Unfortunately the <code>MIKRO-E</code> has some too. This results in the bus being effectively unusable. But fortunately it's not hard to fix this. All you need to do is remove two SMD resistors on the <code>MIKRO-E</code> board as seen in this picture:
+
+<a href="https://blog.codecentric.de/files/2016/01/part-2-modified-audio-board.jpg" rel="attachment wp-att-33182"><img class="aligncenter size-large wp-image-33182" src="https://blog.codecentric.de/files/2016/01/part-2-modified-audio-board-700x394.jpg" alt="part-2-modified-audio-board" /></a>
+
+In order to build the circuit board into my Rapiro, I decided to mount it orthogonally to the carrier board. This way it doesn't cover the WiFi and Bluetooth antennas of the Edison, so I don't have to be afraid of air circulation above the Edison. For this I soldered 90° pins to the MIKRO-E board and some normal sockets to the utility area of the Edison carrier board. I gave up on creating a symmetrical solution by mounting it directly next to the Edison as I wanted to have a little room for some of the <a href="https://www.sparkfun.com/categories/272" target="_blank">Sparkfun Edison shields</a>. If I had soldered the sockets directly next to the Edison this wouldn't be possible anymore.
+
+<a href="https://blog.codecentric.de/files/2016/01/part-2-wm8731-on-edison-small.jpg" rel="attachment wp-att-33155"><img class="aligncenter size-large wp-image-33155" src="https://blog.codecentric.de/files/2016/01/part-2-wm8731-on-edison-small-700x721.jpg" alt="part-2-wm8731-on-edison-small" /></a>
+
+This is how my final setup looked like (the additional two pins you can see on the picture were due to the fact that I noticed the room between camera and microphone was too small so I shifted everything back by two pins. You actually only need 9 pins).
+
+I did the soldering on the back of the carrier board. One thing that got me really confused at first was that the specs for the <code>MICRO-E</code> board claim it to support I2C and SPI, but actually it doesn't support SPI and requires I2S (which is very similar). The reason for them labeling it this way seems to be that the company offers some boards with SPI interfaces that can be updated to I2S by setting a register. Anyway – connecting the SPI labeled pins to the I2S pins on the carrier board worked great. Here is how I connected the wires:
+<table>
+<tbody>
+<tr>
+<th>Pin on the Edison carrier Board</th>
+<th>Pin on the MIKRO-E board</th>
+<th>Description</th>
+</tr>
+<tr>
+<td>3.3V</td>
+<td>3.3V</td>
+<td>Well what should I say? 3.3V</td>
+</tr>
+<tr>
+<td>GND</td>
+<td>GND</td>
+<td>Ground</td>
+</tr>
+<tr>
+<td> SCL</td>
+<td> SCL</td>
+<td> I2C Serial Clock</td>
+</tr>
+<tr>
+<td> SDA</td>
+<td> SDA</td>
+<td> I2C Data</td>
+</tr>
+<tr>
+<td> FS</td>
+<td> DACL</td>
+<td> I2S Digital to Analog (word) Clock (Audio out clock)</td>
+</tr>
+<tr>
+<td> FS</td>
+<td> ADCL</td>
+<td> I2S Analog to Digital (word) Clock (Audio in clock)</td>
+</tr>
+<tr>
+<td> TXD</td>
+<td> MOSI</td>
+<td> I2S Master Out Slave In (Audio out data)</td>
+</tr>
+<tr>
+<td> RXD</td>
+<td> MISO</td>
+<td> I2S Master In Slave Out (Audio in data)</td>
+</tr>
+<tr>
+<td> SCK</td>
+<td> SCK</td>
+<td> I2S Serial Clock (for every bit)</td>
+</tr>
+</tbody>
+</table>
+For a map of the connections take a look at this image:
+<a href="https://blog.codecentric.de/files/2016/01/part-2-sockets-and-connections.jpg" rel="attachment wp-att-33246"><img class="aligncenter size-large wp-image-33246" src="https://blog.codecentric.de/files/2016/01/part-2-sockets-and-connections-700x429.jpg" alt="part-2-sockets-and-connections" /></a>
+
+As soon as you are done with the soldering and stick the two parts together, you should be able to produce and record sound.
+
+Per default the "dummy" codec is used. This simply produces PCM output on the I2S bus, but doesn't take care of initializing the Hardware. With the WM8731 you use I2C to configure the chip and I2S to send the PCM audio data to it. So the only thing left to do is to initialize the chip. The simplest way to do this is by manually setting the registers on the chip using <code>i2cset</code>. Each command is built up the same way <code>-y 1</code> auto-confirms the commands. The first hex value is the address of the WM8731 chip on the I2C bus (this is always the same so you can't use two WM8731 chips on the same bus). The second hex value is the register address you want to manipulate on the device and the third is the value you want to set the register to.
+
+You can find a full list of the register addresses and values in the <a href="http://www.cs.columbia.edu/~sedwards/classes/2008/4840/Wolfson-WM8731-audio-CODEC.pdf" target="_blank">spec document of the WM8731</a> (Starting with page 20 with a complete overview on page 46).
+
+In case of the WM8731 however they seem to have used only the 7 higher bits of the register to address the registers and have used the last bit (bit 8) for values as well. So when setting the volume of the output (Left and Right) you select either the right or the left channel and provide a bit to set both channels to the same value. In case of below script we use the channel with the binary address <code>0000010</code> (taken from the spec doc) and set the <code>LRHP BOTH</code> bit to <code>1</code>. So the resulting real register address: <code>00000101</code> which is hex <code>0x05</code>. In most cases the last bit is set to <code>0</code>, but not always. This fact of the 7-bit registers really confused me at first.
+
+The following sequence of commands manually initializes the chip for audio out:
+<pre>#!/bin/sh
+# reset codec
+i2cset -y 1 0x1a 0x1e 0x00
+# disable DAC and output powerdown ("Disable powerdown" = "Turn the off-state off" = "turn on" ... Mic and line in remain off)
+i2cset -y 1 0x1a 0x0c 0x07
+# set volume for headphone output (both channels) (0x7f = Full Volume, 0xFF = Full Volume with Zero Cross Detect enabled)
+i2cset -y 1 0x1a 0x05 0x65
+# analog audio path control (DAC enabled)
+i2cset -y 1 0x1a 0x08 0x12
+# digital audio path control
+i2cset -y 1 0x1a 0x0a 0x00
+# set sample rate (48000Hz, assuming 12.288MHz codec clock)
+i2cset -y 1 0x1a 0x10 0x00
+# digital audio interface format set (DSP mode, 24 bit)
+i2cset -y 1 0x1a 0x0e 0x8b
+# activate interface
+i2cset -y 1 0x1a 0x12 0x01
+</pre>
+As soon as that's done, you should be able to play an MP3:
+<pre>mpg123 -a hw:1,0 -v "banana.mp3"</pre>
+
+But this solution was only intended for us to check if everything works in general. We don't want to manually set the registers for every operation. Luckily Sergey managed to write a driver for the WM8731 which he provides on his Site about <a href="http://www.malinov.com/Home/sergeys-projects/audio-block-for-intel-edison" target="_blank">Audio Block for Intel Edison</a> (The file is located at the end of the page: <code>edison-wm8731.patch</code>). He added a really good walk-through in the chapter about <a href="http://www.malinov.com/Home/sergeys-projects/audio-block-for-intel-edison#TOC-Compile-Linux-Kernel-with-ALSA-ASoC-Machine-Driver-for-Edison-and-WM8731" target="_blank">Compile Linux Kernel with ALSA ASoC Machine Driver for Edison and WM8731</a>. I don't want to replicate all the stuff he wrote there. So please visit his blog post for the details.
+
+One thing I would however recommend, would be to not download the archive in <code>Step 1. Download and unpack Edison BSP</code>, but to download a more recent one. For this go to <a href="https://software.intel.com/en-us/iot/hardware/edison/downloads" target="_blank">IoT - Intel® Edison Board Download</a> and scroll down to <code>Intel Edison® Board Firmware Software Release X.X</code>. Here you should download the archive behind the <a href="http://downloadmirror.intel.com/25028/eng/edison-src-ww25.5-15.tgz" target="_blank">Sources – Linux Source Files</a> link.
+
+While following Sergey's guide, I would like to provide a little more information on what's actually happening. With the source archive, you actually didn't download the sources of the Linux distribution (called Yocto), but instead you downloaded a set of scripts that handle checking out Yocoto via Git and apply some patches to those sources and hereby adjust the official Yocoto sources to create a pre-configured Yocoto linux distribution that works on an Edison. They also contain a script to package an image that you can upload using the Intel <a href="https://01.org/android-ia/downloads/intel-phone-flash-tool-lite" target="_blank">Phone Flash Tool Lite</a>.
+
+What we are doing in Sergey's guide in <code>Step 2</code>, is to download the WM8731 patch and locate it alongside the other Intel patches and register that patch in the patch-script so it will automatically be applied by the big patch operation.
+
+When building, the <code>make setup</code> command, the last few lines of output will tell you to run other commands than in Sergey's guide, if you follow them instead of running <code>make image</code> they will correctly compile everything, but at the end no image will be created. This is handled by the Intel scripts. So just stick to the guide.
+
+And I think one cup of coffee will not be enough this time, I would more suggest to go grab something to eat or watch a movie ... or yeah, start it before <code>one of those important meetings</code> you have to attend to. It will take quite some time. In my case I had some problems of failing build steps. Using <code>dmesg</code> to see if anything wen't wrong, I noticed that some operations were aborted due to out-of-memory conditions. I had to increase the memory of my VM to have the script running (1GB wasn't enough, 4GB was enough, but I can't really tell how much is really needed).
+
+As soon as you are finished, the WM8731 is now the default sound output device of Edison's OS, so you can output an MP3 with a lot simpler command:
+<pre>mpg123 "banana.mp3"</pre>
+
+If you want it louder, try setting it to the max:
+<pre>amixer set Master 128 unmute</pre>
+(a value of 128 being interpreted as 100%)
+
+// TODO: Document recording using the mic in ...
+
+<h2>Video</h2>
+When it comes to video, there is a vast variety of options. Starting from a simple webcam that simply produces a stream of image data to time-of-flight solutions where you get not quite as good a picture, but also depth data. While you get a simple webcam for less than € 20, the only mini time-of-flight camera I could find was the <a href="http://www.pmdtec.com/products_services/reference_design.php" target="_blank">pmd[vision]® CamBoard nano</a> and would probably add a factor 40 to 100 to that. Luckily it was sold out so I didn't even think about buying it.
+
+I wanted Rapriro to be able to recognize simple objects and react on them. So I had an in depth look at projects like <a href="http://opencv.org/" target="_blank">OpenCV</a>. While it seemed that it should be possible to do object detection with this, it also seemed as if my Edison would have to do some really hard work. After all he would have to deal with IO from the Arduino, do some voice recognition, and now I wanted to add object detection. Not speaking of the object detection being an insanely complex task that would probably take weeks for me to implement.
+
+I then stumbled over a really cool <a href="https://www.kickstarter.com/" target="_blank">Kickstarter</a> project called <a href="http://charmedlabs.com/default/pixy-cmucam5/" target="_blank">Pixy (CMUcam5)</a>. This is a small webcam combined with a microprocessor whose sole purpose is to detect objects and report the position and dimensions of objects it found. It cost about 100 € and just thinking about the time and effort this would save me, it was sold instantly.
+
+<a href="https://blog.codecentric.de/files/2016/01/part-2-pixycam.jpg" rel="attachment wp-att-33261"><img class="aligncenter wp-image-33261" src="https://blog.codecentric.de/files/2016/01/part-2-pixycam-700x696.jpg" alt="part-2-pixycam" width="318" height="316" /></a>
+
+The cool thing is that you can communicate with it using: UART, I2C, SPI and USB (and more). So since I still had a free SPI port, guess what I used. My first plans were to use the mini USB on the back (the one you use to flash the Edison). But the driver for this uses far more resources than I actually need. Keeping it simple with SPI. Eventually I'll add USB to be able to configure the PixyCam without connecting it to a computer and access the video image (this is not available using the other ports), but for now I'll live with the simple solution.
+
+But before we get to that, we need to set up the PixyCam. In order to do that you need to fetch the program <a href="http://www.cmucam.org/projects/cmucam5/files" target="_blank">PixyMon,</a> start it and connect your PixyCam to the computer. You should quite instantly get a video view. First you need to adjust the focus of the lens as you will probably not be able to do this as soon as it's built into Rapiro. At the top of the image sensor there is a little hole and in the PixyCam set there is a little black screw. Use this to carefully fix the lens to the best position.
+
+As soon as that's done you need to go to the settings. Select <code>Pixy Parameters (saved on Pixy)</code> / <code>Interface</code> and set <code>Data output</code> to <code>Arduino ICSP SPI</code>. As soon as you have clicked on OK, you should be good to go.
+
+<a href="https://blog.codecentric.de/files/2016/01/part-2-pixycam-settings.png" rel="attachment wp-att-33343"><img class="aligncenter size-large wp-image-33343" src="https://blog.codecentric.de/files/2016/01/part-2-pixycam-settings-700x451.png" alt="part-2-pixycam-settings" /></a>
+
+Back to the main screen you will see what the PixyCam sees. Did you notice the little push-button at the top of the PixyCam circuit board? Well you can use that and the little RGB LED at the bottom of the cam board to teach the cam some object. I would recommend using some bright, colorful and simply structured objects.
+
+The good thing with being a geek/nerd/whatsoever is that you have all sorts of stuff sitting on your desk, which no normal adult would, and nobody is surprised – they actually expect you to have that sort of stuff. Glad that I had my Cut-The-Rope figures (I call them Om and Nom). They are absolutely perfect for this.
+<a href="https://blog.codecentric.de/files/2016/01/part-2-om.jpg" rel="attachment wp-att-33340"><img class="aligncenter size-large wp-image-33340" src="https://blog.codecentric.de/files/2016/01/part-2-om-700x960.jpg" alt="part-2-om" /></a>
+
+Push and hold the button for a few seconds until it starts to flash in multiple colors, release the button after 2-3 seconds. Now hold the object you want to teach it in the center of the camera view. The LED will start to mimic the color of the object it is currently sensing. It gets brighter the better it can detect it. If you still have the PixyMon application running, you will see the detected object filled with little squares. As soon as you are happy with it, push the button again (don't hold it down this time). Now on the screen you should see a rectangular box around the detected object (or multiple, if there are multiple objects).
+
+<a href="https://blog.codecentric.de/files/2016/01/part-2-detecting-om-and-nom.jpg" rel="attachment wp-att-33341"><img class="aligncenter size-large wp-image-33341" src="https://blog.codecentric.de/files/2016/01/part-2-detecting-om-and-nom-700x450.jpg" alt="part-2-detecting-om-and-nom" /></a>
+(I intentionally messed up my desk as a Unit test ;-) )
+
+So now the PixyCam is configured and should be usable. Unfortunately it isn't possible to mount the PixyCam in Rapiro's head without some work. Now comes the moment in which you are really happy if you know someone with a 3D printer. You can be happy that a fried and I did the work of constructing a small piece of plastic that allows you to mount the PixyCam in Rapiro that fits perfectly inside the Pi-Cam hole in the middle of Rapiro's head.
+
+<a href="https://blog.codecentric.de/files/2016/01/part-2-constructing-pixycam-adapter.jpg" rel="attachment wp-att-33262"><img class="aligncenter size-large wp-image-33262" src="https://blog.codecentric.de/files/2016/01/part-2-constructing-pixycam-adapter-700x1244.jpg" alt="part-2-constructing-pixycam-adapter" /></a>
+
+If you want to print the adapter, feel free to download the <a href="https://public.centerdevice.de/dad42c47-dba9-463a-8ab0-0640bacacb22" target="_blank">STL file</a>.
+
+<a href="https://blog.codecentric.de/files/2016/01/part-2-pixycam-in-rapiro-with-adapter.jpg" rel="attachment wp-att-33263"><img class="aligncenter size-large wp-image-33263" src="https://blog.codecentric.de/files/2016/01/part-2-pixycam-in-rapiro-with-adapter-700x674.jpg" alt="part-2-pixycam-in-rapiro-with-adapter" /></a>
+The PixyCam comes with a 6-channel cable that you can use to communicate using SPI without Source-Select. I first thought that this was sort of hacky, but as it is the only device on the bus, it actually works quite well. Nevertheless I didn't trust it so I created a full 10-channel cable and soldered a 10-pin socket to the free area of my Edison carrier board. You can use a 6 pin socket and connect all except the <code>SPI2 / FS0</code> wire.
+
+I did the soldering on the back of the carrier board. Here is how I connected the wires:
+<table>
+<tbody>
+<tr>
+<th>Pin on the Edison carrier Board</th>
+<th>Pin on the PixyCam socket</th>
+<th>Description</th>
+</tr>
+<tr>
+<td>SPI2 / RXD</td>
+<td>1 (SPI MISO)</td>
+<td>The channel for data from the PixyCam to the Edison</td>
+</tr>
+<tr>
+<td>5V</td>
+<td>2 (5V)</td>
+<td>Well what should I say? 5V</td>
+</tr>
+<tr>
+<td>SPI2 / CLK</td>
+<td>3 (SPI SCK)</td>
+<td>SPI Clock Signal</td>
+</tr>
+<tr>
+<td>SPI2 / TXD</td>
+<td>4 (SPI MOSI)</td>
+<td>The channel for data from the Edison to the PixyCam</td>
+</tr>
+<tr>
+<td>GND</td>
+<td>6 (GND)</td>
+<td>Ground</td>
+</tr>
+<tr>
+<td>SPI2 / FS0</td>
+<td>7 (SPI SS)</td>
+<td>SPI Source-Select (Needed when using SPI-SS transfer mode)</td>
+</tr>
+</tbody>
+</table>
+For a map of the connections have a look at this image:
+
+<a href="https://blog.codecentric.de/files/2016/01/part-2-sockets-and-connections-video.jpg" rel="attachment wp-att-33254"><img class="aligncenter size-large wp-image-33254" src="https://blog.codecentric.de/files/2016/01/part-2-sockets-and-connections-video-700x429.jpg" alt="part-2-sockets-and-connections-video" /></a>
+
+Testing everything from the Edison wasn't quite as easy at first, as there is no "spiset" or similar utilities I could use to experiment with it. But I quickly noticed the Edison comes with a hardware abstraction library called <a href="http://iotdk.intel.com/docs/master/mraa/edison.html" target="_blank">MRAA</a> this provides an easy-to-use API for C, C++, Java and JavaScript. I know that as a Flex developer you get a strange feeling in the gut whenever you have to deal with JavaScript, but in this case it was a blessing. All I needed to do was to start up a Node.js console and I could immediately start writing and running some code. So start a Node.js console by running <code>node</code>.
+
+After some trial and error, I finally came up with this dummy script.
+<pre>// Initialize MRAA.
+var m = require('mraa');
+
+// Output the current MRAA version.
+console.log('MRAA Version: ' + m.getVersion());
+
+// Helper function to a nicely formatted hex string
+// that makes it easier to see the data.
+function decimalToHex(d) {
+    if(d == 0) {
+        return "-";
+    }
+    var hex = Number(d).toString(16);
+    hex = "0000".substr(0, 4 - hex.length) + hex.toUpperCase();
+    return "0x" + hex;
+}
+
+// Create an instance of an SPI interface.
+spi = new m.Spi(0);
+
+// Read 100 words (in the sense of double-bytes) from the SPI and output their content.
+for(var i = 0; i &lt; 100; i++) {
+    resp1 = spi.writeByte(0x00);
+    resp2 = spi.writeByte(0x00);
+    wordVal = (resp1&lt;&lt;8) | resp2;
+    console.log("Received: " + decimalToHex(wordVal));
+}
+</pre>
+All it does is read what it gets from the PixyCam and display the Hex values on the screen.
+
+In above code you can notice two things:
+<ul>
+<li>SPI is a little strange, in order to read a byte, we have to write a byte and we get the read byte as a result.</li>
+<li>The data is transferred <code>big endian</code>, if we used <code>spi.write_word(...)</code> the resulting word would have been read <code>little endian</code>, therefore the two bytes are read separately and the byte-to-word conversion is done manually.</li>
+</ul>
+
+Here is some example output:
+<pre>Received: -
+Received: -
+Received: -
+Received: -
+Received: 0xAA55
+Received: 0x0176
+Received: 0x0002
+Received: 0x008F
+Received: 0x0096
+Received: 0x0030
+Received: 0x001F
+Received: 0xAA55
+Received: 0x0145
+Received: 0x0002
+Received: 0x0077
+Received: 0x00BE
+Received: 0x000C
+Received: 0x0002
+Received: -
+Received: -
+</pre>
+According to <a href="http://cmucam.org/projects/cmucam5/wiki/Pixy_Serial_Protocol" target="_blank">Pixy Serial Protocol</a> I should be looking for a double <code>0x55AA</code> indicating the start of a transmission. Each detected object starts with a single <code>0x55AA</code> (the second <code>0x55AA</code> of the frame-start being the start marker for the first object).
+
+The format of the data is:
+<pre>Bytes    16-bit words   Description
+----------------------------------------------------------------
+0, 1     0              sync (0xaa55)
+2, 3     1              checksum (sum of all 16-bit words 2-6)
+4, 5     2              signature number
+6, 7     3              x center of object
+8, 9     4              y center of object
+10, 11   5              width of object
+12, 13   6              height of object
+</pre>
+So in the above example output it detected two instances of type "2" (Om and Nom) together with their x- and y-positions, width and height.
+
+So technically we're done with the hardware part.
+
+<a href="https://blog.codecentric.de/files/2016/01/part-2-finished-rapiro.jpg" rel="attachment wp-att-33264"><img class="aligncenter size-large wp-image-33264" src="https://blog.codecentric.de/files/2016/01/part-2-finished-rapiro-700x773.jpg" alt="part-2-finished-rapiro" /></a>
+
+In part 3 I will create a custom Arduino sketch that provides feedback to Edison about the positions of each servo as well as the measure results of the IR sensor. On the Edison, we'll set up a Java 8 runtime and start doing some Cyborg code producing.

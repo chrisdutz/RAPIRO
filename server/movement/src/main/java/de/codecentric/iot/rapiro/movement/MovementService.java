@@ -1,7 +1,7 @@
 package de.codecentric.iot.rapiro.movement;
 
 import de.codecentric.iot.rapiro.SystemMode;
-import de.codecentric.iot.rapiro.movement.model.MovementState;
+import de.codecentric.iot.rapiro.movement.model.MovementPosition;
 import flex.messaging.Destination;
 import flex.messaging.MessageBroker;
 import mraa.Result;
@@ -13,7 +13,6 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.flex.messaging.MessageTemplate;
 import org.springframework.flex.remoting.RemotingDestination;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 /**
@@ -35,7 +34,7 @@ public class MovementService implements ApplicationListener<ContextRefreshedEven
 
     private Uart uart;
 
-    private MovementState movementState;
+    private MovementPosition movementPosition;
 
     public MovementService() {
         if(SystemMode.isRealMode()) {
@@ -104,14 +103,14 @@ public class MovementService implements ApplicationListener<ContextRefreshedEven
         }
     }
 
-    public MovementState getMovementState() {
-        return movementState;
+    public MovementPosition getMovementPosition() {
+        return movementPosition;
     }
 
-    public void setMovementState(MovementState movementState) {
-        if(movementState != this.movementState) {
-            this.movementState = movementState;
-            template.send(SERVICE_DESTINATION, movementState);
+    public void setMovementPosition(MovementPosition movementPosition) {
+        if(movementPosition != this.movementPosition) {
+            this.movementPosition = movementPosition;
+            template.send(SERVICE_DESTINATION, movementPosition);
         }
     }
 
@@ -120,7 +119,7 @@ public class MovementService implements ApplicationListener<ContextRefreshedEven
      */
     //@Scheduled(fixedRate = 100)
     public void updateMotionData() {
-        // Read the state from the arduino (or simulate in simulation mode).
+        // Read the state from the Arduino (or simulate in simulation mode).
         String readString;
         System.out.println("Movement: Update state ...");
         if(uart != null) {
@@ -155,10 +154,10 @@ public class MovementService implements ApplicationListener<ContextRefreshedEven
         int irSensor = Integer.valueOf(irSensorString);
 
         // Create a new movement state.
-        MovementState movementState = new MovementState(servoPositions, eyeColors, irSensor);
+        MovementPosition movementPosition = new MovementPosition(servoPositions, eyeColors, irSensor);
 
         // Update the current state (and send the changes to the client.
-        setMovementState(movementState);
+        setMovementPosition(movementPosition);
     }
 
     private String readResponse() {
