@@ -4,6 +4,7 @@ import flex.messaging.MessageBroker;
 import flex.messaging.io.SerializationContext;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.flex.messaging.MessageTemplate;
 
 import javax.annotation.PostConstruct;
@@ -11,6 +12,7 @@ import javax.annotation.PostConstruct;
 /**
  * Little helper to provide utils for BlazeDS.
  */
+@Configuration
 public class BlazeDsConfig {
 
     @Bean

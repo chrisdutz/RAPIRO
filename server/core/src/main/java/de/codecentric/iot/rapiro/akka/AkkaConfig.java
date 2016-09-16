@@ -1,6 +1,8 @@
 package de.codecentric.iot.rapiro.akka;
 
 import akka.actor.ActorSystem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -11,6 +13,8 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class AkkaConfig {
+
+    static final Logger LOG = LoggerFactory.getLogger(AkkaConfig.class);
 
     @Autowired
     private ApplicationContext applicationContext;
@@ -24,9 +28,16 @@ public class AkkaConfig {
      */
     @Bean
     public ActorSystem actorSystem() {
+        LOG.info("-----------------------------------------------");
+        LOG.info("Initializing Akka system");
+        LOG.info("-----------------------------------------------");
+
         ActorSystem system = ActorSystem.create("AkkaJavaSpring");
         // initialize the application context in the Akka Spring Extension
         SpringExtension.SpringExtProvider.get(system).initialize(applicationContext);
+
+        LOG.info("Akka system initialized");
+
         return system;
     }
 

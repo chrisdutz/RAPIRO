@@ -17,6 +17,8 @@
         <akka.version>2.4.10</akka.version>
         <blazeds.version>4.7.3-SNAPSHOT</blazeds.version>
         <commons-codec.version>1.10</commons-codec.version>
+        <kafka.version>0.10.0.1</kafka.version>
+        <logback.version>1.1.7</logback.version>
         <mraa.version>2.0.0</mraa.version>
         <spring.version>4.3.2.RELEASE</spring.version>
         <spring-flex.version>1.5.2.RELEASE</spring-flex.version>
@@ -33,6 +35,14 @@
         <module>vision</module>
         <module>voice</module>
     </modules>
+
+    <dependencies>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
+    </dependencies>
 
     <dependencyManagement>
         <dependencies>
@@ -171,6 +181,12 @@
                 <groupId>org.apache.zookeeper</groupId>
                 <artifactId>zookeeper</artifactId>
                 <version>${zookeeper.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka_2.11</artifactId>
+                <version>${kafka.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
