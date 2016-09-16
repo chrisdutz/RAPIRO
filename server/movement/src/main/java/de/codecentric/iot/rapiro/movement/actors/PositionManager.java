@@ -108,7 +108,7 @@ public class PositionManager extends AbstractActorPublisher<PositionProtocol.Pos
         // Read the state from the Arduino (or simulate in simulation mode).
         String readString;
         System.out.println("Movement: Update state ...");
-        if(uart != null) {
+        if(SystemMode.isRealMode()) {
             System.out.println("Movement: sending '#S'");
             uart.writeStr("#S");
             do {
