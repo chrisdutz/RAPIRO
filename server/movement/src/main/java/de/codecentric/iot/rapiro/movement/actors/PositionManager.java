@@ -90,12 +90,8 @@ public class PositionManager extends AbstractActorPublisher<Position> {
                         deliverBuf();
                     }
                 }).
-                match(ActorPublisherMessage.Request.class, request -> {
-                    deliverBuf();
-                }).
-                match(ActorPublisherMessage.Cancel.class, cancel -> {
-                    context().stop(self());
-                }).
+                match(ActorPublisherMessage.Request.class, request -> deliverBuf()).
+                match(ActorPublisherMessage.Cancel.class, cancel -> context().stop(self())).
                 build());
     }
 
