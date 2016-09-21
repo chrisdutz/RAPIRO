@@ -23,7 +23,7 @@ public class KafkaConfig {
 
     static final Logger LOG = LoggerFactory.getLogger(KafkaConfig.class);
 
-    private static final int KAFKA_SERVER_PORT = 9092;
+    public static final int KAFKA_SERVER_PORT = 9092;
 
     private static final Random RANDOM = new Random();
 

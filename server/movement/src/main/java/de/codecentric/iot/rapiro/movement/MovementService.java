@@ -1,11 +1,9 @@
 package de.codecentric.iot.rapiro.movement;
 
 import de.codecentric.iot.rapiro.SystemMode;
-import flex.messaging.MessageBroker;
 import mraa.Result;
 import mraa.Uart;
 import mraa.UartParity;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.flex.remoting.RemotingDestination;
