@@ -29,10 +29,19 @@
             <groupId>org.apache.flex.blazeds</groupId>
             <artifactId>blazeds-spring-boot-starter</artifactId>
         </dependency>
+
+        <!--
+            ActiveMQ Libs
+        -->
         <dependency>
             <groupId>org.apache.activemq</groupId>
-            <artifactId>activemq-core</artifactId>
-            <version>5.7.0</version>
+            <artifactId>activemq-mqtt</artifactId>
+            <version>5.14.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-kahadb-store</artifactId>
+            <version>5.14.0</version>
         </dependency>
 
         <!--

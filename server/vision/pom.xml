@@ -32,6 +32,11 @@
             <artifactId>flex-messaging-core</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+        </dependency>
+
         <!--
             IOT-DK Libs
         -->
@@ -39,9 +44,14 @@
             <groupId>com.intel.iotdk</groupId>
             <artifactId>mraa</artifactId>
         </dependency>
+
+        <!--
+            Raspberry PI Libs
+        -->
         <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
+            <groupId>com.pi4j</groupId>
+            <artifactId>pi4j-core</artifactId>
+            <version>1.1</version>
         </dependency>
     </dependencies>
 

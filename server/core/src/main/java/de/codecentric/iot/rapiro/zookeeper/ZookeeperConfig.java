@@ -19,7 +19,7 @@ import java.util.Properties;
 @Configuration
 public class ZookeeperConfig {
 
-    static final Logger LOG = LoggerFactory.getLogger(ZookeeperConfig.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ZookeeperConfig.class);
 
     public static final int ZOOKEEPER_SERVER_PORT = 2181;
 

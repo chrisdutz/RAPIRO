@@ -1,11 +1,12 @@
 package de.codecentric.iot.rapiro.vision;
 
-import de.codecentric.iot.rapiro.SystemMode;
+import de.codecentric.iot.rapiro.vision.adapter.VisionAdapter;
 import de.codecentric.iot.rapiro.vision.model.Block;
 import de.codecentric.iot.rapiro.vision.model.ColorBlock;
 import flex.messaging.Destination;
 import flex.messaging.MessageBroker;
-import mraa.Spi;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.flex.messaging.MessageTemplate;
@@ -14,7 +15,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -23,6 +23,8 @@ import java.util.List;
 @Service("visionService")
 @RemotingDestination
 public class VisionService implements InitializingBean {
+
+    static private final Logger LOG = LoggerFactory.getLogger(VisionService.class);
 
     private static final String SERVICE_DESTINATION = "visionEvents";
 
@@ -40,17 +42,12 @@ public class VisionService implements InitializingBean {
     @Autowired
     private MessageTemplate template;
 
-    private Spi spi;
+    @Autowired
+    private VisionAdapter visionAdapter;
 
     private List<Block> blocks;
 
     public VisionService() {
-        if(SystemMode.isRealMode()) {
-            spi = new Spi(0);
-            System.out.println("Vision: Running in real mode");
-        } else {
-            System.out.println("Vision: Running in simulation mode");
-        }
     }
 
     /**
@@ -69,7 +66,7 @@ public class VisionService implements InitializingBean {
     }
 
     private void setBlocks(List<Block> blocks) {
-        if(blocks != this.blocks) {
+        if (blocks != this.blocks) {
             this.blocks = blocks;
             template.send(SERVICE_DESTINATION, blocks);
         }
@@ -80,82 +77,77 @@ public class VisionService implements InitializingBean {
      */
     @Scheduled(fixedRate = 100)
     public void updateVisionData() {
-        if(spi != null) {
-            int lastWord = 0xffff;
-            int readWords = 0;
-            List<Block> curBlocks = null;
-            while(true) {
-                int curWord = readWord();
+        int lastWord = 0xffff;
+        int readWords = 0;
+        List<Block> curBlocks = null;
+        while (true) {
+            int curWord = readWord();
 
-                // Re-Sync, if we are out of sync.
-                if (curWord == PIXY_START_WORD_OUT_OF_SYNC) {
-                    int secondByteLastWord = lastWord & 0x00FF;
-                    // By reading only one byte we should be back in sync.
-                    int syncByte = spi.writeByte((short) 0);
-                    if (((secondByteLastWord & 0x00FF) == 0x00AA) && ((syncByte == 0x0055) || (syncByte == 0x0056))) {
-                        lastWord = PIXY_START_WORD;
-                        if(syncByte == 0x0055) {
-                            curWord = PIXY_START_WORD;
-                        } else {
-                            curWord = PIXY_START_WORD_COLOR_BLOCK;
-                        }
+            // Re-Sync, if we are out of sync.
+            if (curWord == PIXY_START_WORD_OUT_OF_SYNC) {
+                int secondByteLastWord = lastWord & 0x00FF;
+                // By reading only one byte we should be back in sync.
+                int syncByte = visionAdapter.readByte();
+                if (((secondByteLastWord & 0x00FF) == 0x00AA) && ((syncByte == 0x0055) || (syncByte == 0x0056))) {
+                    lastWord = PIXY_START_WORD;
+                    if (syncByte == 0x0055) {
+                        curWord = PIXY_START_WORD;
+                    } else {
+                        curWord = PIXY_START_WORD_COLOR_BLOCK;
                     }
-                }
-
-                // If we read the normal start word twice, it's the start of a normal block.
-                if (lastWord == PIXY_START_WORD && curWord == PIXY_START_WORD) {
-                    Block block = readNormalBlock();
-                    if(block != null) {
-                        if(curBlocks == null) {
-                            curBlocks = new ArrayList<>();
-                        }
-                        if((block.getWidth() > MIN_BLOCK_SIZE) && (block.getHeight() > MIN_BLOCK_SIZE)) {
-                            curBlocks.add(block);
-                        }
-                    }
-                }
-
-                // If we read the normal start word followed by the color block start word,
-                // it's the start of a color block.
-                else if (lastWord == PIXY_START_WORD && curWord == PIXY_START_WORD_COLOR_BLOCK) {
-                    Block block = readColorBlock();
-                    if(block != null) {
-                        if(curBlocks == null) {
-                            curBlocks = new ArrayList<>();
-                        }
-                        if((block.getWidth() > MIN_BLOCK_SIZE) && (block.getHeight() > MIN_BLOCK_SIZE)) {
-                            curBlocks.add(block);
-                        }
-                    }
-                }
-
-                // We have finished reading a complete set of blocks.
-                else if((curBlocks != null) && !curBlocks.isEmpty()) {
-                    setBlocks(curBlocks);
-                    return;
-                }
-
-                // If we haven't read the start of a block for some bytes
-                // there probably is nothing, so we have to clear the list
-                if(readWords > 30) {
-                    setBlocks(null);
-                    return;
-                }
-
-                // Save the last read word and continue.
-                else {
-                    readWords++;
-                    lastWord = curWord;
                 }
             }
-        } else {
-            // Todo ... dummy.
-            setBlocks(Collections.singletonList(new Block(1, 2, 3, 4, 5)));
+
+            // If we read the normal start word twice, it's the start of a normal block.
+            if (lastWord == PIXY_START_WORD && curWord == PIXY_START_WORD) {
+                Block block = readNormalBlock();
+                if (block != null) {
+                    if (curBlocks == null) {
+                        curBlocks = new ArrayList<>();
+                    }
+                    if ((block.getWidth() > MIN_BLOCK_SIZE) && (block.getHeight() > MIN_BLOCK_SIZE)) {
+                        curBlocks.add(block);
+                    }
+                }
+            }
+
+            // If we read the normal start word followed by the color block start word,
+            // it's the start of a color block.
+            else if (lastWord == PIXY_START_WORD && curWord == PIXY_START_WORD_COLOR_BLOCK) {
+                Block block = readColorBlock();
+                if (block != null) {
+                    if (curBlocks == null) {
+                        curBlocks = new ArrayList<>();
+                    }
+                    if ((block.getWidth() > MIN_BLOCK_SIZE) && (block.getHeight() > MIN_BLOCK_SIZE)) {
+                        curBlocks.add(block);
+                    }
+                }
+            }
+
+            // We have finished reading a complete set of blocks.
+            else if ((curBlocks != null) && !curBlocks.isEmpty()) {
+                setBlocks(curBlocks);
+                return;
+            }
+
+            // If we haven't read the start of a block for some bytes
+            // there probably is nothing, so we have to clear the list
+            if (readWords > 30) {
+                setBlocks(null);
+                return;
+            }
+
+            // Save the last read word and continue.
+            else {
+                readWords++;
+                lastWord = curWord;
+            }
         }
     }
 
     private int readWord() {
-        return Integer.reverseBytes(spi.write_word(0)) >> 16 & 0x0000FFFF;
+        return Integer.reverseBytes(visionAdapter.readWord()) >> 16 & 0x0000FFFF;
     }
 
     private Block readNormalBlock() {
@@ -166,7 +158,7 @@ public class VisionService implements InitializingBean {
         int width = readWord();
         int height = readWord();
 
-        if(checksum == signatureNumber + xCenter + yCenter + width + height) {
+        if (checksum == signatureNumber + xCenter + yCenter + width + height) {
             return new Block(signatureNumber, xCenter, yCenter, width, height);
         }
         return null;
@@ -181,7 +173,7 @@ public class VisionService implements InitializingBean {
         int height = readWord();
         int angle = readWord();
 
-        if(checksum == signatureNumber + xCenter + yCenter + width + height + angle) {
+        if (checksum == signatureNumber + xCenter + yCenter + width + height + angle) {
             return new ColorBlock(signatureNumber, xCenter, yCenter, width, height, angle);
         }
         return null;

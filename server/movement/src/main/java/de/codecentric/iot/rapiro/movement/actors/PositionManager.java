@@ -3,11 +3,11 @@ package de.codecentric.iot.rapiro.movement.actors;
 import akka.japi.pf.ReceiveBuilder;
 import akka.stream.actor.AbstractActorPublisher;
 import akka.stream.actor.ActorPublisherMessage;
-import de.codecentric.iot.rapiro.SystemMode;
+import de.codecentric.iot.rapiro.movement.adapter.SerialAdapter;
 import de.codecentric.iot.rapiro.movement.model.Position;
-import mraa.Result;
-import mraa.Uart;
-import mraa.UartParity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import scala.concurrent.duration.FiniteDuration;
@@ -24,46 +24,20 @@ import java.util.concurrent.TimeUnit;
 @Scope("prototype")
 public class PositionManager extends AbstractActorPublisher<Position> {
 
-    private static final String DUMMY_RESPONSE = "#S090091004130090180044090094088086094:000000000000032640:000432\n";
+    private static final Logger LOG = LoggerFactory.getLogger(PositionManager.class);
 
-    private final int MAX_BUFFER_SIZE = 100;
+    private static final int RESPONSE_LENGTH = 10;
+    private static final int MAX_BUFFER_SIZE = 100;
 
-    private Uart uart;
+    @Autowired
+    private SerialAdapter serialAdapter;
 
     private final List<Position> buf = new ArrayList<>();
 
     public PositionManager() {
         // ---------------------------------------------------------------
-        // Initialize the serial port for communication with the Arduino
-        // ---------------------------------------------------------------
-        if(SystemMode.isRealMode()) {
-            uart = new Uart("/dev/ttyMFD1");
-
-            if (uart.setBaudRate(57600) != Result.SUCCESS) {
-                System.err.println("UART: Error setting baud rate");
-            }
-
-            if (uart.setMode(8, UartParity.UART_PARITY_NONE, 1) != Result.SUCCESS) {
-                System.err.println("UART: Error setting mode");
-            }
-
-            if (uart.setFlowcontrol(false, false) != Result.SUCCESS) {
-                System.err.println("UART: Error setting flow control");
-            }
-            System.out.println("Movement: Running in real mode");
-        } else {
-            System.out.println("Movement: Running in simulation mode");
-        }
-
-        // ---------------------------------------------------------------
         // Initialize the akka stuff.
         // ---------------------------------------------------------------
-
-        // Schedule the updating of position data every 100ms
-        FiniteDuration duration = FiniteDuration.create(100, TimeUnit.MILLISECONDS);
-        context().system().scheduler().schedule(duration, duration,
-                self(), new Position(),
-                context().system().dispatcher(), null);
 
         // Define what the actor should do every time it's triggered.
         receive(ReceiveBuilder.
@@ -73,7 +47,7 @@ public class PositionManager extends AbstractActorPublisher<Position> {
                     // TODO: In this case the buffer is full ...
                     // doesn't make sense to send the scheduler a response as it doesn't know what to do with it.
                     // sender().tell(PositionProtocol.UpdatePositionDenied, self());
-                    System.out.println("Buffer full");
+                    LOG.info("Buffer full");
                 }).
                 // If a position request is coming in and the queue is not full,
                 // respond with an acknowledge response.
@@ -93,6 +67,13 @@ public class PositionManager extends AbstractActorPublisher<Position> {
                 match(ActorPublisherMessage.Request.class, request -> deliverBuf()).
                 match(ActorPublisherMessage.Cancel.class, cancel -> context().stop(self())).
                 build());
+
+        // Schedule the updating of position data every 100ms
+        // TODO: This is rather ugly ... find a way to start this from outside the initialization.
+        FiniteDuration duration = FiniteDuration.create(100, TimeUnit.MILLISECONDS);
+        context().system().scheduler().schedule(duration, duration,
+                self(), new Position(),
+                context().system().dispatcher(), null);
     }
 
     private void deliverBuf() {
@@ -125,20 +106,11 @@ public class PositionManager extends AbstractActorPublisher<Position> {
     private void updatePositionData(Position element) {
         // Read the state from the Arduino (or simulate in simulation mode).
         String readString;
-        System.out.println("Movement: Update state ...");
-        if(SystemMode.isRealMode()) {
-            System.out.println("Movement: sending '#S'");
-            uart.writeStr("#S");
-            do {
-                readString = readResponse();
-            } while (!readString.startsWith("#S"));
-            System.out.println("Movement: reading " + DUMMY_RESPONSE.length() + "bytes");
-            readString = uart.readStr(DUMMY_RESPONSE.length());
-            System.out.println("Movement: done.");
-        } else {
-            readString = DUMMY_RESPONSE;
-        }
-        System.out.println("Movement: Update state: '" + readString + "'");
+        LOG.debug("Movement: Update state ...");
+        LOG.debug("Movement: sending '#S'");
+        serialAdapter.send("#S");
+        readString = serialAdapter.read(RESPONSE_LENGTH);
+        LOG.debug("Movement: Update state: '" + readString + "'");
 
         // Parse the response.
         String[] segments = readString.substring(2).split(":");
@@ -164,17 +136,6 @@ public class PositionManager extends AbstractActorPublisher<Position> {
         element.setServoPositions(servoPositions);
         element.setEyeColors(eyeColors);
         element.setIrDistance(irSensor);
-    }
-
-    private String readResponse() {
-        StringBuilder sb = new StringBuilder();
-        String readChar;
-        do {
-            readChar = uart.readStr(1);
-            System.out.print(readChar);
-            sb.append(readChar);
-        } while (!"\n".equals(readChar));
-        return sb.toString();
     }
 
 }

@@ -21,7 +21,7 @@ import java.util.Random;
 @Configuration
 public class KafkaConfig {
 
-    static final Logger LOG = LoggerFactory.getLogger(KafkaConfig.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KafkaConfig.class);
 
     public static final int KAFKA_SERVER_PORT = 9092;
 
@@ -38,13 +38,14 @@ public class KafkaConfig {
         Properties properties = new Properties();
         properties.setProperty("zookeeper.connect", "localhost:" + ZookeeperConfig.ZOOKEEPER_SERVER_PORT);
         properties.setProperty("broker.id", "1");
+        properties.setProperty("default.replication.factor", "1");
         properties.setProperty("host.name", "localhost");
         properties.setProperty("port", Integer.toString(KAFKA_SERVER_PORT));
         properties.setProperty("log.dir", logDir.getAbsolutePath());
         properties.setProperty("log.flush.interval.messages", String.valueOf(1));
 
         kafka.server.KafkaConfig config = new kafka.server.KafkaConfig(properties);
-        KafkaServer server = new KafkaServer(config, new SystemTime(), Option$.MODULE$.<String>empty());
+        KafkaServer server = new KafkaServer(config, new SystemTime(), Option$.MODULE$.empty());
         server.startup();
 
         LOG.info("Kafka system initialized");

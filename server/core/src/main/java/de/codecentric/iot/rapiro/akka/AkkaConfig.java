@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 /**
  * Created by christoferdutz on 14.09.16.
@@ -14,7 +15,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class AkkaConfig {
 
-    static final Logger LOG = LoggerFactory.getLogger(AkkaConfig.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AkkaConfig.class);
 
     @Autowired
     private ApplicationContext applicationContext;

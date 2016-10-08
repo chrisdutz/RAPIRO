@@ -1,9 +1,10 @@
 package de.codecentric.iot.rapiro.movement;
 
-import de.codecentric.iot.rapiro.SystemMode;
-import mraa.Result;
-import mraa.Uart;
-import mraa.UartParity;
+import de.codecentric.iot.rapiro.movement.adapter.SerialAdapter;
+import de.codecentric.iot.rapiro.zookeeper.ZookeeperConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.flex.remoting.RemotingDestination;
@@ -16,62 +17,34 @@ import org.springframework.stereotype.Service;
 @RemotingDestination
 public class MovementService implements ApplicationListener<ContextRefreshedEvent> {
 
-    private Uart uart;
+    private static final Logger LOG = LoggerFactory.getLogger(MovementService.class);
 
-    public MovementService() {
-        if(SystemMode.isRealMode()) {
-            uart = new Uart("/dev/ttyMFD1");
-
-            if (uart.setBaudRate(57600) != Result.SUCCESS) {
-                System.err.println("UART: Error setting baud rate");
-            }
-
-            if (uart.setMode(8, UartParity.UART_PARITY_NONE, 1) != Result.SUCCESS) {
-                System.err.println("UART: Error setting mode");
-            }
-
-            if (uart.setFlowcontrol(false, false) != Result.SUCCESS) {
-                System.err.println("UART: Error setting flow control");
-            }
-            System.out.println("Movement: Running in real mode");
-        } else {
-            System.out.println("Movement: Running in simulation mode");
-        }
-    }
+    @Autowired
+    private SerialAdapter serialAdapter;
 
     public void stop() {
-        System.out.println("Movement: Stop");
-        if(uart != null) {
-            uart.writeStr("#M0");
-        }
+        LOG.info("Movement: Stop");
+        serialAdapter.send("#M0");
     }
 
     public void moveForward() {
-        System.out.println("Movement: Forward");
-        if(uart != null) {
-            uart.writeStr("#M1");
-        }
+        LOG.info("Movement: Forward");
+        serialAdapter.send("#M1");
     }
 
     public void moveLeft() {
-        System.out.println("Movement: Left");
-        if(uart != null) {
-            uart.writeStr("#M4");
-        }
+        LOG.info("Movement: Left");
+        serialAdapter.send("#M4");
     }
 
     public void moveRight() {
-        System.out.println("Movement: Right");
-        if(uart != null) {
-            uart.writeStr("#M3");
-        }
+        LOG.info("Movement: Right");
+        serialAdapter.send("#M3");
     }
 
     public void moveBack() {
-        System.out.println("Movement: Back");
-        if(uart != null) {
-            uart.writeStr("#M2");
-        }
+        LOG.info("Movement: Back");
+        serialAdapter.send("#M2");
     }
 
     /**
@@ -79,10 +52,8 @@ public class MovementService implements ApplicationListener<ContextRefreshedEven
      * @param applicationEvent the spring {@link ContextRefreshedEvent} instance
      */
     public void onApplicationEvent(ContextRefreshedEvent applicationEvent) {
-        System.out.println("Movement: Turn the servos off");
-        if(uart != null) {
-            uart.writeStr("#H");
-        }
+        LOG.info("Movement: Turn the servos off");
+        serialAdapter.send("#H");
     }
 
 }
