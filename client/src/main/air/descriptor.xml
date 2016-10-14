@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <application xmlns="http://ns.adobe.com/air/application/20.0">
 
-<!-- Adobe AIR Application Descriptor File Template.
+<!-- Adobe AIR init.Application Descriptor File Template.
 
 	Specifies parameters for identifying, installing, and launching AIR applications.
 

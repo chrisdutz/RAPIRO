@@ -1,4 +1,5 @@
 = Rapiro firmware
+
 ##The difference between default sample firmware and  this firmware. 
  1. Motion No. is 2 digits #Mnn. (evilbluechickens-san ) 
  2. Added Servo off command #H. (evilbluechickens-san )
@@ -7,7 +8,7 @@
  5. Motion data moved to Flash. Some motions can be added.
  6. User trim data was separated into include file.
 
-|       |default | This |
+|       |default| This |
 |-------|-------|------|
 |STOP   | #M0   | #M00 |
 |Foward | #M1   | #M01 |
@@ -45,3 +46,35 @@ I had to do a "sudo cp" as copying the normal way was blocked by the system.
 
 Edison:
 I have to fins out which lib I have to copy to "/usr/lib/java".
+
+= Serial communication on Raspberry PI
+
+1. Enable UART by adding the following line to `/boot/config.txt`
+
+    enable_uart=1
+
+2. Disable the Rasberry using this port as console, by removing the following part from the file `/boot/cmdline.txt`:
+
+    console=serial0,115200
+
+3. Set the baudrate to 57600 by adding the following line to `/etc/rc.local`
+
+    stty -F /dev/ttyS0 57600
+
+Now you should be able to send data to the Arduino using:
+
+    echo -ne '#M1' > /dev/ttyS0
+    echo -ne '#M0' > /dev/ttyS0
+    echo -ne '#H' > /dev/ttyS0
+
+Or read data from the Serial port using the following command:
+
+    cat -v < /dev/ttyS0
+
+Very helpful document:
+
+Setting up Serial:
+https://www.hackster.io/fvdbosch/uart-for-serial-console-or-hat-on-raspberry-pi-3-5be0c2
+
+Setting up WiFi Accesspoint
+https://frillip.com/using-your-raspberry-pi-3-as-a-wifi-access-point-with-hostapd/

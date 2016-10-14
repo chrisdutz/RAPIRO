@@ -30,17 +30,17 @@
             <s:StreamingAMFChannel id="streamingChannel"
                                    connectTimeout="5"
                                    requestTimeout="5"
-                                   url="http://192.168.42.1:8080/messagebroker/websocket-amf"/>
+                                   url="http://192.168.23.1:8080/messagebroker/websocket-amf"/>
             <s:AMFChannel id="longPollingChannel"
                           pollingEnabled="true"
                           piggybackingEnabled="true"
                           pollingInterval="1000"
-                          url="http://192.168.42.1:8080/messagebroker/long-polling-amf"/>
+                          url="http://192.168.23.1:8080/messagebroker/long-polling-amf"/>
             <s:AMFChannel id="shortPollingChannel"
                           pollingEnabled="true"
                           piggybackingEnabled="true"
                           pollingInterval="1000"
-                          url="http://192.168.42.1:8080/messagebroker/short-polling-amf"/>
+                          url="http://192.168.23.1:8080/messagebroker/short-polling-amf"/>
         </s:ChannelSet>
 
         <s:RemoteObject id="movementService"

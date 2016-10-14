@@ -35,4 +35,10 @@ public class ColorBlock extends Block {
                 ", angle=" + angle +
                 '}';
     }
+
+    @Override
+    public int getChecksum() {
+        return super.getChecksum() + getAngle();
+    }
+
 }

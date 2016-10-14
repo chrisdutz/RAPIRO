@@ -93,6 +93,11 @@
         <s:FormItem id="languageSelection"
                     label="{resourceManager.getString('rapiro', 'settings.language')}:"
                     width="300"/>
+        <s:FormItem id="serverAddress"
+                    label="{resourceManager.getString('rapiro', 'settings.serverAddress')}:"
+                    width="300">
+            <s:Label text="{CONFIG::baseUrl}"/>
+        </s:FormItem>
     </s:Form>
 
 </s:View>

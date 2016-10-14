@@ -43,6 +43,9 @@
     <modules>
         <module>client</module>
         <module>server</module>
+
+        <module>j2mod</module>
+        <module>moka7</module>
     </modules>
 
 </project>

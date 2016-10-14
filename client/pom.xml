@@ -14,7 +14,7 @@
     <packaging>air</packaging>
 
     <properties>
-        <base-url>http://10.10.56.132:8080</base-url>
+        <base-url>http://192.168.23.1:8080</base-url>
     </properties>
 
     <build>

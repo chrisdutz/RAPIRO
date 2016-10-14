@@ -1,4 +1,4 @@
-package de.codecentric.iot.rapiro.movement;
+package de.codecentric.iot.rapiro.vision;
 
 import akka.actor.ActorSystem;
 import akka.kafka.ProducerSettings;
@@ -10,7 +10,7 @@ import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
 import de.codecentric.iot.rapiro.akka.SpringExtension;
 import de.codecentric.iot.rapiro.kafka.KafkaConfig;
-import de.codecentric.iot.rapiro.movement.model.Position;
+import de.codecentric.iot.rapiro.vision.model.Block;
 import flex.messaging.Destination;
 import flex.messaging.MessageBroker;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -24,9 +24,9 @@ import org.springframework.context.annotation.Configuration;
  * Created by christoferdutz on 13.09.16.
  */
 @Configuration
-public class MovementConfig implements InitializingBean {
+public class VisionConfig implements InitializingBean {
 
-    private static final String SERVICE_DESTINATION = "movementEvents";
+    private static final String SERVICE_DESTINATION = "visionEvents";
 
     @Autowired
     private MessageBroker broker;
@@ -77,10 +77,10 @@ public class MovementConfig implements InitializingBean {
         // actually created by an actor and consumed by a producer, this is
         // just from the Kafka point of view the component that produces the
         // Kafka flow).
-        Flow.of(Position.class).map(elem ->
-                new ProducerRecord<>("position", elem)
+        Flow.of(Block.class).map(elem ->
+                new ProducerRecord<>("block", elem)
         ).to(kafkaProducer).runWith(Source.actorPublisher(
-                SpringExtension.SpringExtProvider.get(actorSystem).props("positionActor")),
+                SpringExtension.SpringExtProvider.get(actorSystem).props("visionActor")),
                 materializer);
     }
 

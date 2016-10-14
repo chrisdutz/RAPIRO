@@ -21,13 +21,13 @@ public class VoiceService implements ApplicationListener<ContextRefreshedEvent> 
     @Autowired
     private VoiceAdapter voiceAdapter;
 
-    public void startSinging() {
-        LOG.info("Voice: Start singing");
-        voiceAdapter.playFile("/audio/minions-banana.wav");
+    public void play(String sampleName) {
+        LOG.info("Voice: Start playing " + sampleName);
+        voiceAdapter.playFile("/audio/" + sampleName);
     }
 
-    public void stopSinging() {
-        LOG.info("Voice: Stop singing");
+    public void stop() {
+        LOG.info("Voice: Stop playing");
         voiceAdapter.stop();
     }
 
@@ -37,7 +37,7 @@ public class VoiceService implements ApplicationListener<ContextRefreshedEvent> 
      */
     public void onApplicationEvent(ContextRefreshedEvent applicationEvent) {
         LOG.info("Voice: Play start sound");
-        voiceAdapter.playFile("/audio/minions-hellow.wav");
+        play("minions-hellow.wav");
     }
 
 }

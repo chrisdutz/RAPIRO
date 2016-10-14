@@ -23,5 +23,6 @@ buildNumber.properties
 hs_err_pid*
 
 rebel.xml
+activemq-data/
 
 # Created by .ignore support plugin (hsz.mobi)

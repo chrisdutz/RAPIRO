@@ -71,4 +71,9 @@ public class Block {
                 ", height=" + height +
                 '}';
     }
+
+    public int getChecksum() {
+        return getSignature() + getX() + getY() + getWidth() + getHeight();
+    }
+
 }

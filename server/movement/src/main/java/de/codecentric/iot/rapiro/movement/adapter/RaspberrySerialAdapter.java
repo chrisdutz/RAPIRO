@@ -23,8 +23,8 @@ public class RaspberrySerialAdapter implements SerialAdapter {
     public RaspberrySerialAdapter() {
         uart = new SerialImpl();
         try {
-            uart.open(Serial.DEFAULT_COM_PORT, Baud._57600, DataBits._8, Parity.NONE,
-                    StopBits._1, FlowControl.NONE);
+            uart.open("/dev/ttyS0", Baud._57600, DataBits._8,
+                    Parity.NONE, StopBits._1, FlowControl.NONE);
         } catch (IOException e) {
             LOG.error("Error initializing serial io", e);
             // TODO: Throw an error
