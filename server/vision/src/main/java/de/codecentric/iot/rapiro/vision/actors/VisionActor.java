@@ -52,7 +52,6 @@ public class VisionActor extends AbstractActor<Block> {
                         }
                         break;
                     case FIRST_55_BYTE_READ:
-                        blocks = new LinkedList<>();
                         int word = visionAdapter.readWord();
                         if (word == 0xAA55) {
                             state = State.NORMAL_BLOCK_SYNC_WORD_READ;
@@ -76,8 +75,11 @@ public class VisionActor extends AbstractActor<Block> {
                         block.setHeight(visionAdapter.readWord());
 
                         if (block.getChecksum() == checksum) {
+                            if(blocks == null) {
+                                blocks = new LinkedList<>();
+                            }
                             blocks.add(block);
-                            LOG.debug("Read normal block: " + block.getSignature());
+                            //LOG.debug("Read normal block: " + block.getSignature());
                         } else {
                             LOG.warn("Checksum error.");
                         }
@@ -95,8 +97,11 @@ public class VisionActor extends AbstractActor<Block> {
                         colorBlock.setAngle(visionAdapter.readWord());
 
                         if (colorBlock.getChecksum() == checksum) {
+                            if(blocks == null) {
+                                blocks = new LinkedList<>();
+                            }
                             blocks.add(colorBlock);
-                            LOG.debug("Read color block: " + colorBlock.getSignature());
+                            //LOG.debug("Read color block: " + colorBlock.getSignature());
                         } else {
                             LOG.warn("Checksum error.");
                         }
