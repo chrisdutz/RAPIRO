@@ -30,17 +30,17 @@
             <s:StreamingAMFChannel id="streamingChannel"
                                    connectTimeout="5"
                                    requestTimeout="5"
-                                   url="http://192.168.23.1:8080/messagebroker/websocket-amf"/>
+                                   url="{baseUrl}/messagebroker/websocket-amf"/>
             <s:AMFChannel id="longPollingChannel"
                           pollingEnabled="true"
                           piggybackingEnabled="true"
                           pollingInterval="1000"
-                          url="http://192.168.23.1:8080/messagebroker/long-polling-amf"/>
+                          url="{baseUrl}/messagebroker/long-polling-amf"/>
             <s:AMFChannel id="shortPollingChannel"
                           pollingEnabled="true"
                           piggybackingEnabled="true"
                           pollingInterval="1000"
-                          url="http://192.168.23.1:8080/messagebroker/short-polling-amf"/>
+                          url="{baseUrl}/messagebroker/short-polling-amf"/>
         </s:ChannelSet>
 
         <s:RemoteObject id="movementService"
@@ -58,8 +58,8 @@
                         destination="voiceService"
                         channelSet="{channelSet}"
                         fault="onFault(event)">
-            <s:method name="startSinging" result="onResult(event)"/>
-            <s:method name="stopSinging" result="onResult(event)"/>
+            <s:method name="play" result="onResult(event)"/>
+            <s:method name="stop" result="onResult(event)"/>
         </s:RemoteObject>
 
         <s:Consumer id="visionEvents"
@@ -92,7 +92,8 @@
 
         import spark.primitives.Rect;
 
-        public static const baseUrl:String = CONFIG::baseUrl;
+        [Bindable]
+        public var baseUrl:String = CONFIG::baseUrl;
 
         [Bindable]
         private var cpuLoad:Number;
@@ -135,11 +136,15 @@
         }
 
         protected function onStartSingingClick(event:MouseEvent):void {
-            voiceService.startSinging();
+            voiceService.play("minions-banana.wav");
+        }
+
+        protected function onStartDalekClick(event:MouseEvent):void {
+            voiceService.play("dalek.wav");
         }
 
         protected function onStopSingingClick(event:MouseEvent):void {
-            voiceService.stopSinging();
+            voiceService.stop();
         }
 
         protected function onVisionEvent(event:MessageEvent):void {
@@ -197,7 +202,8 @@
 
         <s:VGroup width="100%">
             <s:Button click="onStartSingingClick(event)" label="Start Singing"/>
-            <s:Button click="onStopSingingClick(event)" label="Stop Singing"/>
+            <s:Button click="onStartDalekClick(event)" label="Start Dalek"/>
+            <s:Button click="onStopSingingClick(event)" label="Be silent"/>
         </s:VGroup>
     </s:VGroup>
 
