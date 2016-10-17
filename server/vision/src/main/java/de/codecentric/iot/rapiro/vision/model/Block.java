@@ -1,9 +1,11 @@
 package de.codecentric.iot.rapiro.vision.model;
 
+import java.io.Serializable;
+
 /**
  * Created by christoferdutz on 23.04.16.
  */
-public class Block {
+public class Block implements Serializable {
 
     private int signature;
     private int x, y;

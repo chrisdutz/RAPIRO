@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import scala.Option$;
 
 import java.io.File;
@@ -19,6 +20,7 @@ import java.util.Random;
  * Little helper to setup kafka.
  */
 @Configuration
+@Profile("kafka")
 public class KafkaConfig {
 
     private static final Logger LOG = LoggerFactory.getLogger(KafkaConfig.class);
@@ -54,8 +56,8 @@ public class KafkaConfig {
     }
 
     private static File constructTempDir(String dirPrefix) {
-        File file = new File(SystemUtils.getJavaIoTmpDir(), dirPrefix + "-" + RANDOM.nextInt(10000000));
-        if (!file.mkdirs()) {
+        File file = new File(SystemUtils.getJavaIoTmpDir(), "rapiro-kafka");
+        if (!file.exists() && !file.mkdirs()) {
             throw new RuntimeException("could not create temp directory: " + file.getAbsolutePath());
         }
         file.deleteOnExit();

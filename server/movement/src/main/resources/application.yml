@@ -1,0 +1,11 @@
+spring:
+    cloud:
+        stream:
+            bindings:
+                input:
+                    content-type: application/json
+                    destination: position
+            kafka:
+                binder:
+                    brokers: localhost
+                    zkNodes: localhost

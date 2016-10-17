@@ -4,21 +4,24 @@ import de.codecentric.iot.rapiro.akka.actors.AbstractActor;
 import de.codecentric.iot.rapiro.vision.adapter.VisionAdapter;
 import de.codecentric.iot.rapiro.vision.model.Block;
 import de.codecentric.iot.rapiro.vision.model.ColorBlock;
+import de.codecentric.iot.rapiro.vision.model.Scene;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
+ * Actor that reads in data from the PixyCams SPI interface until a full
+ * frame of block data has been read and dispatches each Block into
+ *
  * Created by christoferdutz on 14.10.16.
  */
 @Component("visionActor")
 @Scope("prototype")
-public class VisionActor extends AbstractActor<Block> {
+public class VisionActor extends AbstractActor<Scene> {
 
     private static final Logger LOG = LoggerFactory.getLogger(VisionActor.class);
 
@@ -26,22 +29,22 @@ public class VisionActor extends AbstractActor<Block> {
     private VisionAdapter visionAdapter;
 
     @Override
-    public void onNext(Block element) {
+    public void onNext(Scene element) {
         super.onNext(element);
     }
 
     @Override
-    protected List<Block> getItems() {
+    @SuppressWarnings("all")
+    protected List<Scene> getItems() {
         try {
-            List<Block> blocks = null;
+            Set<Block> blocks = null;
             State state = State.BEFORE_FRAME;
             int checksum;
             while (true) {
                 switch (state) {
                     case BEFORE_FRAME:
-                        while (visionAdapter.readByte() != (byte) 0xAA) {
-                            // Ignore the content.
-                        }
+                        // Just read in bytes till the first 0xAA byte is read.
+                        while (visionAdapter.readByte() != (byte) 0xAA);
                         state = State.FIRST_AA_BYTE_READ;
                         break;
                     case FIRST_AA_BYTE_READ:
@@ -58,8 +61,10 @@ public class VisionActor extends AbstractActor<Block> {
                         } else if (word == 0xAA56) {
                             state = State.COLOR_BLOCK_SYNC_WORD_READ;
                         } else {
-                            if (blocks.size() > 0) {
-                                return blocks;
+                            if ((blocks != null) && !blocks.isEmpty()) {
+                                Scene scene = new Scene();
+                                scene.setBlocks(blocks);
+                                return Collections.singletonList(scene);
                             }
                             state = State.BEFORE_FRAME;
                         }
@@ -75,11 +80,7 @@ public class VisionActor extends AbstractActor<Block> {
                         block.setHeight(visionAdapter.readWord());
 
                         if (block.getChecksum() == checksum) {
-                            if(blocks == null) {
-                                blocks = new LinkedList<>();
-                            }
-                            blocks.add(block);
-                            //LOG.debug("Read normal block: " + block.getSignature());
+                            blocks = addBlock(blocks, block);
                         } else {
                             LOG.warn("Checksum error.");
                         }
@@ -97,11 +98,7 @@ public class VisionActor extends AbstractActor<Block> {
                         colorBlock.setAngle(visionAdapter.readWord());
 
                         if (colorBlock.getChecksum() == checksum) {
-                            if(blocks == null) {
-                                blocks = new LinkedList<>();
-                            }
-                            blocks.add(colorBlock);
-                            //LOG.debug("Read color block: " + colorBlock.getSignature());
+                            blocks = addBlock(blocks, colorBlock);
                         } else {
                             LOG.warn("Checksum error.");
                         }
@@ -113,6 +110,14 @@ public class VisionActor extends AbstractActor<Block> {
             LOG.warn("An error occurred in getItems()", e);
             throw e;
         }
+    }
+
+    private Set<Block> addBlock(Set<Block> blocks, Block block) {
+        if(blocks == null) {
+            blocks = new HashSet<>();
+        }
+        blocks.add(block);
+        return blocks;
     }
 
     private enum State {

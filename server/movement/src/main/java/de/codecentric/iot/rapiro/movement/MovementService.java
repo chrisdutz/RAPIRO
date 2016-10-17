@@ -1,7 +1,6 @@
 package de.codecentric.iot.rapiro.movement;
 
 import de.codecentric.iot.rapiro.movement.adapter.SerialAdapter;
-import de.codecentric.iot.rapiro.zookeeper.ZookeeperConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

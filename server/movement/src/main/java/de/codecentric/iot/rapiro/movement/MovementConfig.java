@@ -9,7 +9,6 @@ import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
 import de.codecentric.iot.rapiro.akka.SpringExtension;
-import de.codecentric.iot.rapiro.kafka.KafkaConfig;
 import de.codecentric.iot.rapiro.movement.model.Position;
 import flex.messaging.Destination;
 import flex.messaging.MessageBroker;
@@ -40,7 +39,7 @@ public class MovementConfig implements InitializingBean {
      */
     @Override
     public void afterPropertiesSet() {
-        initAkkaFlow();
+        //initAkkaFlow();
         initBlazeDsDestinations();
         initKafkaStreams();
     }
@@ -68,7 +67,7 @@ public class MovementConfig implements InitializingBean {
         // ProducerRecord instance.
         ProducerSettings<byte[], String> producerSettings = ProducerSettings.apply(actorSystem,
                 new ByteArraySerializer(), new StringSerializer())
-                .withBootstrapServers("localhost:" + KafkaConfig.KAFKA_SERVER_PORT);
+                .withBootstrapServers("localhost:9092");
         Sink kafkaProducer = Producer.plainSink(producerSettings);
 
         // Define the akka flow to take PositionProtocol.Position items

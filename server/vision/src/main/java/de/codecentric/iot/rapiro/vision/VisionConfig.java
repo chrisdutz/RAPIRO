@@ -6,11 +6,11 @@ import akka.kafka.javadsl.Producer;
 import akka.stream.ActorMaterializer;
 import akka.stream.Materializer;
 import akka.stream.javadsl.Flow;
+import akka.stream.javadsl.GraphDSL;
 import akka.stream.javadsl.Sink;
 import akka.stream.javadsl.Source;
 import de.codecentric.iot.rapiro.akka.SpringExtension;
-import de.codecentric.iot.rapiro.kafka.KafkaConfig;
-import de.codecentric.iot.rapiro.vision.model.Block;
+import de.codecentric.iot.rapiro.vision.model.Scene;
 import flex.messaging.Destination;
 import flex.messaging.MessageBroker;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -68,7 +68,7 @@ public class VisionConfig implements InitializingBean {
         // ProducerRecord instance.
         ProducerSettings<byte[], String> producerSettings = ProducerSettings.apply(actorSystem,
                 new ByteArraySerializer(), new StringSerializer())
-                .withBootstrapServers("localhost:" + KafkaConfig.KAFKA_SERVER_PORT);
+                .withBootstrapServers("localhost:9092");
         Sink kafkaProducer = Producer.plainSink(producerSettings);
 
         // Define the akka flow to take PositionProtocol.Position items
@@ -77,8 +77,8 @@ public class VisionConfig implements InitializingBean {
         // actually created by an actor and consumed by a producer, this is
         // just from the Kafka point of view the component that produces the
         // Kafka flow).
-        Flow.of(Block.class).map(elem ->
-                new ProducerRecord<>("block", elem)
+        Flow.of(Scene.class).map(elem ->
+                new ProducerRecord<>("scenes", elem.toString())
         ).to(kafkaProducer).runWith(Source.actorPublisher(
                 SpringExtension.SpringExtProvider.get(actorSystem).props("visionActor")),
                 materializer);
