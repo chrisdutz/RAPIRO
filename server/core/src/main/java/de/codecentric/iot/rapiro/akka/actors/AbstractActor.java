@@ -19,10 +19,9 @@ public abstract class AbstractActor<T> extends AbstractActorPublisher<T> {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractActor.class);
 
-    private static final int MAX_BUFFER_SIZE = 100;
+    private static final int MAX_BUFFER_SIZE = 10;
 
     private final List<T> buf = new ArrayList<>();
-
 
     public AbstractActor() {
         // ---------------------------------------------------------------
@@ -45,11 +44,13 @@ public abstract class AbstractActor<T> extends AbstractActorPublisher<T> {
                     for(T item : items) {
                         // If the buffer is empty, respond immediately.
                         if (buf.isEmpty() && totalDemand() > 0) {
+                            LOG.debug("Deliver item " + item);
                             onNext(item);
                         }
                         // If the buffer is not empty, add the current response to the queue and
                         // try to start delivering the buffer.
                         else {
+                            LOG.debug("Buffer item " + item);
                             buf.add(item);
                             deliverBuf();
                         }

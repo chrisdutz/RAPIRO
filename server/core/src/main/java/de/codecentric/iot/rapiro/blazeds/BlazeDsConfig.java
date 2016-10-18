@@ -23,7 +23,7 @@ public class BlazeDsConfig {
         return messageTemplate;
     }
 
-    @PostConstruct
+    //@PostConstruct
     public void configureSerializationContext() {
         //ThreadLocal SerializationContent
         SerializationContext serializationContext = SerializationContext.getSerializationContext();

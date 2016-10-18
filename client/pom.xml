@@ -33,6 +33,8 @@
                         </goals>
                         <configuration>
                             <includeJavaClasses>
+                                <class>de.codecentric.iot.rapiro.movement.model.*</class>
+                                <class>de.codecentric.iot.rapiro.telemetry.model.*</class>
                                 <class>de.codecentric.iot.rapiro.vision.model.*</class>
                             </includeJavaClasses>
                             <templates>
@@ -178,6 +180,18 @@
         </dependency>
 
         <!-- Needed for code generation -->
+        <dependency>
+            <groupId>de.codecentric.iot.rapiro</groupId>
+            <artifactId>rapiro-server-movement</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.codecentric.iot.rapiro</groupId>
+            <artifactId>rapiro-server-telemetry</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>de.codecentric.iot.rapiro</groupId>
             <artifactId>rapiro-server-vision</artifactId>

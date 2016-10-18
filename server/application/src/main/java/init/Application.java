@@ -3,7 +3,6 @@ package init;
 import com.pi4j.io.serial.*;
 import com.pi4j.io.serial.impl.SerialImpl;
 import com.pi4j.util.NativeLibraryLoader;
-import de.codecentric.iot.rapiro.streams.StreamConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;

@@ -77,8 +77,9 @@
 
     <fx:Script>
         <![CDATA[
+        import de.codecentric.iot.rapiro.telemetry.model.TelemetryData;
+        import de.codecentric.iot.rapiro.vision.model.Scene;
         import de.codecentric.iot.rapiro.vision.model.Block;
-        import de.codecentric.iot.rapiro.vision.model.ColorBlock;
 
         import mx.collections.ArrayCollection;
 
@@ -148,13 +149,13 @@
         }
 
         protected function onVisionEvent(event:MessageEvent):void {
-            if (event.message.body is ArrayCollection) {
+            if (event.message.body is de.codecentric.iot.rapiro.vision.model.Scene) {
                 // Clear all boxes.
                 vision.removeAllElements();
 
                 // Add new boxes for each detected object.
-                var blocks:ArrayCollection = ArrayCollection(event.message.body);
-                for each(var block:Block in blocks) {
+                var scene:de.codecentric.iot.rapiro.vision.model.Scene = de.codecentric.iot.rapiro.vision.model.Scene(event.message.body);
+                for each(var block:Block in scene.blocks) {
                     var rect:Rect = new Rect();
                     rect.stroke = new SolidColorStroke(0x000000);
                     rect.fill = new SolidColor(0x00FF00);
@@ -168,9 +169,10 @@
         }
 
         protected function onTelemetryEvent(event:MessageEvent):void {
-            cpuLoad = Math.round(Number(event.message.body) * 100);
+            if (event.message.body is TelemetryData) {
+                cpuLoad = Math.round(TelemetryData(event.message.body).cpuLoad * 100);
+            }
         }
-
         ]]>
     </fx:Script>
 

@@ -21,7 +21,7 @@ import java.util.List;
 @Component("objectTrackerActor")
 public class ObjectTrackerActor extends AbstractActorSubscriber {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ObjectTrackerActor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ObjectTrackerActor.class);
 
     final int MAX_QUEUE_SIZE = 10;
     final List<Scene> queue = new LinkedList<>();
@@ -36,7 +36,6 @@ public class ObjectTrackerActor extends AbstractActorSubscriber {
                         }).
                 build());
     }
-
 
     @Override
     public RequestStrategy requestStrategy() {

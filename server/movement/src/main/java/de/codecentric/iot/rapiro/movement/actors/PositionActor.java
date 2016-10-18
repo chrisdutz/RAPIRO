@@ -6,7 +6,6 @@ import de.codecentric.iot.rapiro.movement.model.Position;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +14,9 @@ import java.util.Date;
 import java.util.List;
 
 /**
+ * Actor that reads in information about servo positions, ir sensor values
+ * as well as the current eye-color values from Rapiro's Arduino.
+ *
  * Created by christoferdutz on 12.09.16.
  */
 @Scope("prototype")
@@ -37,11 +39,8 @@ public class PositionActor extends AbstractActor<Position> {
         try {
             // Read the state from the Arduino (or simulate in simulation mode).
             String readString;
-            LOG.debug("Movement: Update state ...");
-            LOG.debug("Movement: sending '#S'");
             serialAdapter.send("#S");
             readString = serialAdapter.read(RESPONSE_LENGTH);
-            LOG.debug("Movement: Update state: '" + readString + "'");
 
             // Parse the response.
             String[] segments = readString.substring(2).split(":");
