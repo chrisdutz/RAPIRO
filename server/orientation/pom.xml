@@ -27,14 +27,6 @@
             <groupId>org.springframework.flex</groupId>
             <artifactId>spring-flex-core</artifactId>
         </dependency>
-
-        <!--
-            IOT-DK Libs
-        -->
-        <dependency>
-            <groupId>com.intel.iotdk</groupId>
-            <artifactId>mraa</artifactId>
-        </dependency>
     </dependencies>
 
 </project>

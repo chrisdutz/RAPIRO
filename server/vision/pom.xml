@@ -38,14 +38,6 @@
         </dependency>
 
         <!--
-            IOT-DK Libs
-        -->
-        <dependency>
-            <groupId>com.intel.iotdk</groupId>
-            <artifactId>mraa</artifactId>
-        </dependency>
-
-        <!--
             Raspberry PI Libs
         -->
         <dependency>

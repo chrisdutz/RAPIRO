@@ -49,6 +49,10 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
         </dependency>
+        <!--dependency>
+            <groupId>org.springframework.scala</groupId>
+            <artifactId>spring-scala</artifactId>
+        </dependency-->
 
         <dependency>
             <groupId>de.codecentric.iot.rapiro</groupId>

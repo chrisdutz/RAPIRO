@@ -14,16 +14,15 @@
     <packaging>pom</packaging>
 
     <properties>
+        <scala.version>2.11.8</scala.version>
         <akka.version>2.4.11</akka.version>
         <blazeds.version>4.7.3-SNAPSHOT</blazeds.version>
         <commons-codec.version>1.10</commons-codec.version>
-        <kafka.version>0.10.0.1</kafka.version>
         <logback.version>1.1.7</logback.version>
-        <mraa.version>2.0.0</mraa.version>
         <spring.version>4.3.2.RELEASE</spring.version>
+        <spring-scala.version>1.0.0.M2</spring-scala.version>
         <spring-flex.version>1.5.2.RELEASE</spring-flex.version>
         <spring-boot.version>1.4.1.RELEASE</spring-boot.version>
-        <zookeeper.version>3.4.9</zookeeper.version>
     </properties>
 
     <modules>
@@ -44,6 +43,80 @@
         <module>object-tracker</module>
     </modules>
 
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>net.alchim31.maven</groupId>
+                    <artifactId>scala-maven-plugin</artifactId>
+                    <version>3.2.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.5.1</version>
+                    <configuration>
+                        <source>${java.version}</source>
+                        <target>${java.version}</target>
+                        <compilerId>groovy-eclipse-compiler</compilerId>
+                    </configuration>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.codehaus.groovy</groupId>
+                            <artifactId>groovy-eclipse-compiler</artifactId>
+                            <version>2.9.2-01</version>
+                        </dependency>
+                        <dependency>
+                            <groupId>org.codehaus.groovy</groupId>
+                            <artifactId>groovy-eclipse-batch</artifactId>
+                            <version>2.4.3-01</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring-boot.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>scala-compile-first</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>scala-test-compile</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
     <dependencies>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -54,6 +127,12 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.scala-lang</groupId>
+                <artifactId>scala-library</artifactId>
+                <version>${scala.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>com.typesafe.akka</groupId>
                 <artifactId>akka-actor_2.11</artifactId>
@@ -90,12 +169,6 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
                 <version>3.4</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.intel.iotdk</groupId>
-                <artifactId>mraa</artifactId>
-                <version>${mraa.version}</version>
             </dependency>
 
             <dependency>
@@ -144,6 +217,18 @@
                 <version>${spring.version}</version>
             </dependency>
 
+            <!--dependency>
+                <groupId>org.springframework.scala</groupId>
+                <artifactId>spring-scala</artifactId>
+                <version>${spring-scala.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.springframework</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency-->
+
             <dependency>
                 <groupId>org.springframework.flex</groupId>
                 <artifactId>spring-flex-core</artifactId>
@@ -189,71 +274,7 @@
                 <artifactId>spring-boot-starter-jetty</artifactId>
                 <version>${spring-boot.version}</version>
             </dependency>
-
-            <dependency>
-                <groupId>org.apache.zookeeper</groupId>
-                <artifactId>zookeeper</artifactId>
-                <version>${zookeeper.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-log4j12</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>log4j</groupId>
-                        <artifactId>log4j</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.kafka</groupId>
-                <artifactId>kafka_2.11</artifactId>
-                <version>${kafka.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>slf4j-log4j12</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>log4j</groupId>
-                        <artifactId>log4j</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>Camden.RELEASE</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
         </dependencies>
     </dependencyManagement>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.5.1</version>
-                <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                </configuration>
-            </plugin>
-        </plugins>
-
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-maven-plugin</artifactId>
-                    <version>${spring-boot.version}</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
 
 </project>

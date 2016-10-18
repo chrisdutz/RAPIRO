@@ -1,6 +1,8 @@
 package de.codecentric.iot.rapiro.akka;
 
 import akka.actor.ActorSystem;
+import akka.stream.ActorMaterializer;
+import akka.stream.Materializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +42,11 @@ public class AkkaConfig {
         LOG.info("Akka system initialized");
 
         return system;
+    }
+
+    @Bean
+    public Materializer materializer(ActorSystem actorSystem) {
+        return ActorMaterializer.create(actorSystem);
     }
 
 }

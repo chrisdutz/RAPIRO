@@ -31,28 +31,6 @@
         </dependency>
 
         <!--
-            ActiveMQ Libs
-        -->
-        <dependency>
-            <groupId>org.apache.activemq</groupId>
-            <artifactId>activemq-mqtt</artifactId>
-            <version>5.14.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.activemq</groupId>
-            <artifactId>activemq-kahadb-store</artifactId>
-            <version>5.14.0</version>
-        </dependency>
-
-        <!--
-            IOT-DK Libs
-        -->
-        <dependency>
-            <groupId>com.intel.iotdk</groupId>
-            <artifactId>mraa</artifactId>
-        </dependency>
-
-        <!--
             Akka Libs
         -->
         <dependency>
@@ -67,22 +45,6 @@
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-stream-kafka_2.11</artifactId>
             <version>0.11</version>
-        </dependency>
-
-        <!--
-            Zookeeper Libs
-        -->
-        <dependency>
-            <groupId>org.apache.zookeeper</groupId>
-            <artifactId>zookeeper</artifactId>
-        </dependency>
-
-        <!--
-            Kafka Libs
-        -->
-        <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka_2.11</artifactId>
         </dependency>
     </dependencies>
 

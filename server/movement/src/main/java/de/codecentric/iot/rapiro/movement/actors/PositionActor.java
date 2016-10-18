@@ -17,8 +17,8 @@ import java.util.List;
 /**
  * Created by christoferdutz on 12.09.16.
  */
-@Component("positionActor")
 @Scope("prototype")
+@Component("positionActor")
 public class PositionActor extends AbstractActor<Position> {
 
     private static final Logger LOG = LoggerFactory.getLogger(PositionActor.class);

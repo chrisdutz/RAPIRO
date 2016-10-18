@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Profile("dummy")
 public class DummySerialAdapter implements SerialAdapter {
 
-    private static final Logger LOG = LoggerFactory.getLogger(EdisonSerialAdapter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DummySerialAdapter.class);
     private static final String DUMMY_RESPONSE = "#S090091004130090180044090094088086094:000000000000032640:000432\n";
 
     public DummySerialAdapter() {

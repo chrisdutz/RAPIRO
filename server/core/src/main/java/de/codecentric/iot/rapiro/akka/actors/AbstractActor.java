@@ -89,4 +89,5 @@ public abstract class AbstractActor<T> extends AbstractActorPublisher<T> {
     }
 
     protected abstract List<T> getItems();
+
 }

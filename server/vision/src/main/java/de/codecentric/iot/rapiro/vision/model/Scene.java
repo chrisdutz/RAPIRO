@@ -1,6 +1,7 @@
 package de.codecentric.iot.rapiro.vision.model;
 
 import java.io.Serializable;
+import java.util.Calendar;
 import java.util.Set;
 
 /**
@@ -8,7 +9,17 @@ import java.util.Set;
  */
 public class Scene implements Serializable {
 
+    private Calendar time;
+
     private Set<Block> blocks;
+
+    public Calendar getTime() {
+        return time;
+    }
+
+    public void setTime(Calendar time) {
+        this.time = time;
+    }
 
     public Set<Block> getBlocks() {
         return blocks;

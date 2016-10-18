@@ -19,8 +19,8 @@ import java.util.*;
  *
  * Created by christoferdutz on 14.10.16.
  */
-@Component("visionActor")
 @Scope("prototype")
+@Component("visionActor")
 public class VisionActor extends AbstractActor<Scene> {
 
     private static final Logger LOG = LoggerFactory.getLogger(VisionActor.class);
@@ -63,6 +63,7 @@ public class VisionActor extends AbstractActor<Scene> {
                         } else {
                             if ((blocks != null) && !blocks.isEmpty()) {
                                 Scene scene = new Scene();
+                                scene.setTime(Calendar.getInstance());
                                 scene.setBlocks(blocks);
                                 return Collections.singletonList(scene);
                             }
