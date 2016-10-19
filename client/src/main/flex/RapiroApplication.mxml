@@ -5,7 +5,8 @@
 <s:TabbedViewNavigatorApplication
         xmlns:fx="http://ns.adobe.com/mxml/2009"
         xmlns:s="library://ns.adobe.com/flex/spark"
-        preinitialize="onPreInitialize(event)">
+        preinitialize="onPreInitialize(event)"
+        applicationDPI="320">
 
     <fx:Metadata>
         [ResourceBundle("rapiro")]

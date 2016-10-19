@@ -22,6 +22,10 @@ public class RaspberryVisionAdapter implements VisionAdapter {
 
     public RaspberryVisionAdapter() {
         LOG.info("Vision: Running in 'raspberry' mode");
+        int res = Spi.wiringPiSPISetupMode(0, 10000000, 0);
+        if(res == -1) {
+            System.out.println("Error in: Spi.wiringPiSPISetupMode(0, 10000000, 0)");
+        }
     }
 
     @Override

@@ -6,7 +6,7 @@ package de.codecentric.iot.rapiro.telemetry.model;
 public class TelemetryData {
 
     private double cpuLoad;
-    private long memoryUsage;
+    private double memoryUsage;
 
     public TelemetryData() {
     }
@@ -24,11 +24,11 @@ public class TelemetryData {
         this.cpuLoad = cpuLoad;
     }
 
-    public long getMemoryUsage() {
+    public double getMemoryUsage() {
         return memoryUsage;
     }
 
-    public void setMemoryUsage(long memoryUsage) {
+    public void setMemoryUsage(double memoryUsage) {
         this.memoryUsage = memoryUsage;
     }
 }

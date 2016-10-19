@@ -117,8 +117,14 @@ public class VisionActor extends AbstractActor<Scene> {
         if(blocks == null) {
             blocks = new HashSet<>();
         }
-        blocks.add(block);
+        if(includeBlock(block)) {
+            blocks.add(block);
+        }
         return blocks;
+    }
+
+    private boolean includeBlock(Block block) {
+        return (block.getWidth() > 20) && (block.getHeight() > 20);
     }
 
     private enum State {

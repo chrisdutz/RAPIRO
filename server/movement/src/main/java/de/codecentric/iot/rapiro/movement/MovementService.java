@@ -46,13 +46,17 @@ public class MovementService implements ApplicationListener<ContextRefreshedEven
         serialAdapter.send("#M2");
     }
 
+    public void powerDown() {
+        LOG.info("Movement: Power Down");
+        serialAdapter.send("#H0");
+    }
+
     /**
      * Turn the servos off to avoid having the little chap shiver all the time.
      * @param applicationEvent the spring {@link ContextRefreshedEvent} instance
      */
     public void onApplicationEvent(ContextRefreshedEvent applicationEvent) {
-        LOG.info("Movement: Turn the servos off");
-        serialAdapter.send("#H");
+        powerDown();
     }
 
 }

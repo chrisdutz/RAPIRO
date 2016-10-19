@@ -62,26 +62,31 @@
             <s:method name="stop" result="onResult(event)"/>
         </s:RemoteObject>
 
-        <s:Consumer id="visionEvents"
-                    destination="visionEvents"
+        <s:Consumer id="positionEvents"
+                    destination="positionEvents"
                     channelSet="{channelSet}"
                     fault="onMessageFault(event)"
-                    message="onVisionEvent(event)"/>
+                    message="onPositionEvent(event)"/>
 
         <s:Consumer id="telemetryEvents"
                     destination="telemetryEvents"
                     channelSet="{channelSet}"
                     fault="onMessageFault(event)"
                     message="onTelemetryEvent(event)"/>
+
+        <s:Consumer id="visionEvents"
+                    destination="visionEvents"
+                    channelSet="{channelSet}"
+                    fault="onMessageFault(event)"
+                    message="onVisionEvent(event)"/>
     </fx:Declarations>
 
     <fx:Script>
         <![CDATA[
+        import de.codecentric.iot.rapiro.movement.model.Position;
         import de.codecentric.iot.rapiro.telemetry.model.TelemetryData;
         import de.codecentric.iot.rapiro.vision.model.Scene;
         import de.codecentric.iot.rapiro.vision.model.Block;
-
-        import mx.collections.ArrayCollection;
 
         import mx.events.FlexEvent;
         import mx.graphics.SolidColor;
@@ -100,8 +105,9 @@
         private var cpuLoad:Number;
 
         protected function onCreationComplete(event:FlexEvent):void {
-            visionEvents.subscribe();
+            positionEvents.subscribe();
             telemetryEvents.subscribe();
+            visionEvents.subscribe();
         }
 
         protected function onResult(event:ResultEvent):void {
@@ -136,6 +142,10 @@
             movementService.stop();
         }
 
+        protected function onPowerDownClick(event:MouseEvent):void {
+            movementService.powerDown();
+        }
+
         protected function onStartSingingClick(event:MouseEvent):void {
             voiceService.play("minions-banana.wav");
         }
@@ -168,6 +178,12 @@
             }
         }
 
+        protected function onPositionEvent(event:MessageEvent):void {
+            if (event.message.body is Position) {
+                trace(event.message.body);
+            }
+        }
+
         protected function onTelemetryEvent(event:MessageEvent):void {
             if (event.message.body is TelemetryData) {
                 cpuLoad = Math.round(TelemetryData(event.message.body).cpuLoad * 100);
@@ -186,6 +202,7 @@
             </s:HGroup>
             <s:Button click="onBackClick(event)" label="Back"/>
         </s:VGroup>
+        <s:Button click="onPowerDownClick(event)" label="Power Down"/>
 
         <s:Group width="320" height="200">
             <s:Rect width="100%" height="100%">
