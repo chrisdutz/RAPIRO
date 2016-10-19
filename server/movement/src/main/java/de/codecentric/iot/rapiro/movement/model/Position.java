@@ -1,11 +1,13 @@
 package de.codecentric.iot.rapiro.movement.model;
 
+import java.util.Calendar;
+
 /**
  * Created by christoferdutz on 21.09.16.
  */
 public class Position {
 
-    private long timestamp;
+    private Calendar time;
     private int[] servoPositions;
     private int[] eyeColors;
     private int irDistance;
@@ -13,19 +15,19 @@ public class Position {
     public Position() {
     }
 
-    public Position(long timestamp, int[] servoPositions, int[] eyeColors, int irDistance) {
-        this.timestamp = timestamp;
+    public Position(Calendar time, int[] servoPositions, int[] eyeColors, int irDistance) {
+        this.time = time;
         this.servoPositions = servoPositions;
         this.eyeColors = eyeColors;
         this.irDistance = irDistance;
     }
 
-    public long getTimestamp() {
-        return timestamp;
+    public Calendar getTime() {
+        return time;
     }
 
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
+    public void setTime(Calendar time) {
+        this.time = time;
     }
 
     public int[] getServoPositions() {

@@ -1,11 +1,10 @@
 package de.codecentric.iot.rapiro.streams
 
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.Materializer
-import akka.stream.scaladsl.{Sink, Source}
+import akka.stream.scaladsl.Sink
 import de.codecentric.iot.rapiro.akka.SpringExtension
-import de.codecentric.iot.rapiro.movement.model.Position
-import de.codecentric.iot.rapiro.vision.model.Scene
+import de.codecentric.iot.rapiro.akka.events.AddListenerEvent
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
@@ -19,18 +18,22 @@ class StreamConfiguration extends InitializingBean {
 
 
   override def afterPropertiesSet(): Unit = {
+    val debugActor = actorSystem.actorOf(Props[DebugActor], "debugActor")
+
     // Create all the actors used in this application.
-    val movementActorSource: Source[Position, ActorRef] = Source.actorPublisher[Position](
-      SpringExtension.SpringExtProvider.get(actorSystem).props("positionActor")
+    val movementActor: ActorRef = actorSystem.actorOf(
+      SpringExtension.SpringExtProvider.get(actorSystem).props("movementActor")
     )
-    val telemetryActorSource: Source[Position, ActorRef] = Source.actorPublisher[Position](
+    val telemetryActor: ActorRef = actorSystem.actorOf(
       SpringExtension.SpringExtProvider.get(actorSystem).props("telemetryActor")
     )
-    val visionActorSource: Source[Scene, ActorRef] = Source.actorPublisher[Scene](
+    val visionActor:ActorRef = actorSystem.actorOf(
       SpringExtension.SpringExtProvider.get(actorSystem).props("visionActor")
     )
 
-
+    movementActor.tell(new AddListenerEvent(debugActor), null)
+    telemetryActor.tell(new AddListenerEvent(debugActor), null)
+    visionActor.tell(new AddListenerEvent(debugActor), null)
     // Create any actors that process the stream.
 
 
@@ -48,15 +51,15 @@ class StreamConfiguration extends InitializingBean {
 
 
     // Define the flows
-    val movementFlow = movementActorSource to movementPublisherSink
-    val telemetryFlow = telemetryActorSource to telemetryPublisherSink
-    val visionFlow = visionActorSource to visionPublisherSink
+    //val movementFlow = movementActorSource to movementPublisherSink
+    //val telemetryFlow = telemetryActorSource to telemetryPublisherSink
+    //val visionFlow = visionActorSource to visionPublisherSink
 
 
     // Start the flows
-    movementFlow.run()
-    telemetryFlow.run()
-    visionFlow.run()
+    //movementFlow.run()
+    //telemetryFlow.run()
+    //visionFlow.run()
   }
 
 }
