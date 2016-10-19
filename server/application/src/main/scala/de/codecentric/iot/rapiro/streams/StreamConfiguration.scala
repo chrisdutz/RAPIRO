@@ -20,9 +20,9 @@ class StreamConfiguration extends InitializingBean {
 
   override def afterPropertiesSet(): Unit = {
     // Create all the actors used in this application.
-    /*val movementActorSource: Source[Position, ActorRef] = Source.actorPublisher[Position](
+    val movementActorSource: Source[Position, ActorRef] = Source.actorPublisher[Position](
       SpringExtension.SpringExtProvider.get(actorSystem).props("positionActor")
-    )*/
+    )
     val telemetryActorSource: Source[Position, ActorRef] = Source.actorPublisher[Position](
       SpringExtension.SpringExtProvider.get(actorSystem).props("telemetryActor")
     )
@@ -48,13 +48,13 @@ class StreamConfiguration extends InitializingBean {
 
 
     // Define the flows
-    //val movementFlow = movementActorSource to movementPublisherSink
+    val movementFlow = movementActorSource to movementPublisherSink
     val telemetryFlow = telemetryActorSource to telemetryPublisherSink
     val visionFlow = visionActorSource to visionPublisherSink
 
 
     // Start the flows
-    //movementFlow.run()
+    movementFlow.run()
     telemetryFlow.run()
     visionFlow.run()
   }
