@@ -13,14 +13,14 @@ import java.util.Arrays;
  */
 @Component
 @Profile("raspberry")
-public class RaspberryVisionAdapter implements VisionAdapter {
+public class RaspberrySpiAdapter implements SpiAdapter {
 
-    private static final Logger LOG = LoggerFactory.getLogger(RaspberryVisionAdapter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RaspberrySpiAdapter.class);
 
     private static final byte[] byteBuffer = new byte[1];
     private static final byte[] wordBuffer = new byte[2];
 
-    public RaspberryVisionAdapter() {
+    public RaspberrySpiAdapter() {
         LOG.info("Vision: Running in 'raspberry' mode");
         int res = Spi.wiringPiSPISetupMode(0, 10000000, 0);
         if(res == -1) {

@@ -5,7 +5,6 @@ import java.util.Calendar
 import akka.actor.{Actor, ActorRef}
 import de.codecentric.iot.rapiro.akka.events.{AddListenerEvent, RemoveListenerEvent, UpdateEvent}
 import de.codecentric.iot.rapiro.vision.actors.VisionActor.UpdateScene
-import de.codecentric.iot.rapiro.vision.adapter.VisionAdapter
 import de.codecentric.iot.rapiro.vision.model.{Block, ColorBlock, Scene}
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,18 +12,20 @@ import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
 
 import scala.annotation.tailrec
-import scala.collection.JavaConverters._
+import scala.collection.JavaConversions._
 import scala.concurrent.duration.DurationInt
+import com.typesafe.scalalogging._
+import de.codecentric.iot.rapiro.vision.adapter.SpiAdapter
 
 /**
   * Created by christoferdutz on 19.10.16.
   */
 @Scope ("prototype")
 @Component ("visionActor")
-class VisionActor() extends Actor with InitializingBean {
+class VisionActor() extends Actor with InitializingBean with LazyLogging {
   import context.dispatcher
 
-  @Autowired private val visionAdapter: VisionAdapter = null
+  @Autowired private val spiAdapter: SpiAdapter = null
 
   var listeners:List[ActorRef] = List[ActorRef]()
 
@@ -39,7 +40,8 @@ class VisionActor() extends Actor with InitializingBean {
       listeners = listeners.filter(_ == event.getActorRef)
     case _:UpdateEvent =>
       if(listeners.nonEmpty) {
-        val updateScene: UpdateScene = UpdateScene(getScene)
+        val scene:Scene = getScene
+        val updateScene: UpdateScene = UpdateScene(scene)
         listeners.foreach(target => target ! updateScene)
       }
   }
@@ -48,36 +50,58 @@ class VisionActor() extends Actor with InitializingBean {
     val blocks: List[Block] = yCamProtocol(BEFORE_FRAME)
     val scene: Scene = new Scene
     scene.setTime(Calendar.getInstance())
-    scene.setBlocks(blocks.asJava)
+    val javaBlocks: java.util.List[Block] = seqAsJavaList(blocks)
+    scene.setBlocks(javaBlocks)
     scene
   }
 
   @tailrec private def yCamProtocol(state: VisionActorState, blocks: List[Block] = null): List[Block] = {
     state match {
       case BEFORE_FRAME =>
-        while (visionAdapter.readByte != 0xAA.toByte) {}
-        yCamProtocol(FIRST_AA_BYTE_READ, blocks)
+        var curByte: Byte = 0
+        var bytesRead: Int = 0
+        // Start reading bytes until we read the start byte.
+        do {
+          curByte = spiAdapter.readByte
+          bytesRead += 1
+        } while ((curByte != 0xAA.toByte) && (bytesRead < 100))
+
+        // Continue if we read the start byte.
+        if(curByte == 0xAA.toByte) {
+          yCamProtocol(FIRST_AA_BYTE_READ, blocks)
+        }
+        // Abort if the start byte wasn't read after at least 100 bytes.
+        else {
+          logger.debug("Giving up trying to find start of frame.")
+          null
+        }
       case FIRST_AA_BYTE_READ =>
-        if (visionAdapter.readByte == 0x55.toByte)
+        if (spiAdapter.readByte == 0x55.toByte)
           yCamProtocol(FIRST_55_BYTE_READ, blocks)
         else
           yCamProtocol(BEFORE_FRAME, blocks)
       case FIRST_55_BYTE_READ =>
-        val word: Int = visionAdapter.readWord
+        val word: Int = spiAdapter.readWord
         if (word == 0xAA55)
           yCamProtocol(NORMAL_BLOCK_SYNC_WORD_READ, blocks)
         else if (word == 0xAA56)
           yCamProtocol(COLOR_BLOCK_SYNC_WORD_READ, blocks)
-        else
+        else {
+          if(blocks != null) {
+            logger.trace("Exiting with " + blocks.length + " blocks")
+          } else {
+            logger.trace("Exiting without blocks")
+          }
           blocks
+        }
       case NORMAL_BLOCK_SYNC_WORD_READ =>
-        val checksum = visionAdapter.readWord
+        val checksum = spiAdapter.readWord
         val block = new Block
-        block.setSignature(visionAdapter.readWord)
-        block.setX(visionAdapter.readWord)
-        block.setY(visionAdapter.readWord)
-        block.setWidth(visionAdapter.readWord)
-        block.setHeight(visionAdapter.readWord)
+        block.setSignature(spiAdapter.readWord)
+        block.setX(spiAdapter.readWord)
+        block.setY(spiAdapter.readWord)
+        block.setWidth(spiAdapter.readWord)
+        block.setHeight(spiAdapter.readWord)
         if (block.getChecksum == checksum) {
           if(blocks == null) {
             yCamProtocol(FIRST_55_BYTE_READ, List[Block](block))
@@ -88,14 +112,14 @@ class VisionActor() extends Actor with InitializingBean {
           yCamProtocol(FIRST_55_BYTE_READ, blocks)
         }
       case COLOR_BLOCK_SYNC_WORD_READ =>
-        val checksum = visionAdapter.readWord
+        val checksum = spiAdapter.readWord
         val colorBlock = new ColorBlock
-        colorBlock.setSignature(visionAdapter.readWord)
-        colorBlock.setX(visionAdapter.readWord)
-        colorBlock.setY(visionAdapter.readWord)
-        colorBlock.setWidth(visionAdapter.readWord)
-        colorBlock.setHeight(visionAdapter.readWord)
-        colorBlock.setAngle(visionAdapter.readWord)
+        colorBlock.setSignature(spiAdapter.readWord)
+        colorBlock.setX(spiAdapter.readWord)
+        colorBlock.setY(spiAdapter.readWord)
+        colorBlock.setWidth(spiAdapter.readWord)
+        colorBlock.setHeight(spiAdapter.readWord)
+        colorBlock.setAngle(spiAdapter.readWord)
         if (colorBlock.getChecksum == checksum) {
           if(blocks == null) {
             yCamProtocol(FIRST_55_BYTE_READ, List[Block](colorBlock))

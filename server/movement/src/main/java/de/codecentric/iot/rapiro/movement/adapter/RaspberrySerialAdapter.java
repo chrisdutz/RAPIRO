@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * Created by christoferdutz on 23.03.16.
@@ -42,12 +43,23 @@ public class RaspberrySerialAdapter implements SerialAdapter {
     }
 
     @Override
-    public String read(int length) {
+    public byte readByte() {
+        byte[] response = readBuffer(1);
+        return response[0];
+    }
+
+    @Override
+    public int readWord() {
+        byte[] response = readBuffer(2);
+        return ((response[0] & 0xff) << 8) | (response[1] & 0xff);
+    }
+
+    private byte[] readBuffer(int numBytes) {
         try {
-            return new String(uart.read(length));
+            return uart.read(numBytes);
         } catch (IOException e) {
             LOG.error("Caught exception while reading from serial port", e);
-            return null;
+            throw new RuntimeException("Caught exception while reading from serial port", e);
         }
     }
 

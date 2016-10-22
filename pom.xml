@@ -41,6 +41,7 @@
     </prerequisites>
 
     <modules>
+        <module>arduino</module>
         <module>client</module>
         <module>server</module>
 

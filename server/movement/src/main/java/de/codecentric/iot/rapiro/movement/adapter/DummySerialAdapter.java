@@ -12,10 +12,25 @@ import org.springframework.stereotype.Component;
 @Profile("dummy")
 public class DummySerialAdapter implements SerialAdapter {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DummySerialAdapter.class);
     private static final String DUMMY_RESPONSE = "#S090091004130090180044090094088086094:000000000000032640:000432\n";
 
+    private static final Logger LOG = LoggerFactory.getLogger(DummySerialAdapter.class);
+
+    private byte[] protocol;
+    private int pos;
+
     public DummySerialAdapter() {
+        protocol = new byte[] {(byte) 0x00, (byte) 0x00, (byte) 0x00,
+                (byte) 0xAA, (byte) 0x55, (byte) 0xAA, (byte) 0x55,
+                (byte) 0x01, (byte) 0x76, (byte) 0x00, (byte) 0x02,
+                (byte) 0x00, (byte) 0x8F, (byte) 0x00, (byte) 0x96,
+                (byte) 0x00, (byte) 0x30, (byte) 0x00, (byte) 0x1F,
+                (byte) 0xAA, (byte) 0x55, (byte) 0x01, (byte) 0x45,
+                (byte) 0x00, (byte) 0x02, (byte) 0x00, (byte) 0x77,
+                (byte) 0x00, (byte) 0xBE, (byte) 0x00, (byte) 0x0C,
+                (byte) 0x00, (byte) 0x02};
+        pos = -1;
+
         LOG.info("Movement: Running in 'dummy' mode");
     }
 
@@ -25,8 +40,16 @@ public class DummySerialAdapter implements SerialAdapter {
     }
 
     @Override
-    public String read(int length) {
-        return DUMMY_RESPONSE;
+    public byte readByte() {
+        if(pos == protocol.length - 1) {
+            pos = -1;
+        }
+        return protocol[++pos];
+    }
+
+    @Override
+    public int readWord() {
+        return ((readByte() & 0xff) << 8) | (readByte() & 0xff);
     }
 
 }

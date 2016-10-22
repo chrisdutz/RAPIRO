@@ -4,25 +4,25 @@ import java.util.Calendar
 
 import akka.actor.{Actor, ActorRef}
 import de.codecentric.iot.rapiro.akka.events.{AddListenerEvent, RemoveListenerEvent, UpdateEvent}
-import de.codecentric.iot.rapiro.movement.actors.MovementActor.UpdatePosition
+import de.codecentric.iot.rapiro.movement.actors.MovementActor.UpdateMovementState
 import de.codecentric.iot.rapiro.movement.adapter.SerialAdapter
-import de.codecentric.iot.rapiro.movement.model.Position
+import de.codecentric.iot.rapiro.movement.model.MovementState
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
 
+import scala.annotation.tailrec
 import scala.concurrent.duration.DurationInt
+import com.typesafe.scalalogging._
 
 /**
   * Created by christoferdutz on 19.10.16.
   */
 @Scope("prototype")
 @Component("movementActor")
-class MovementActor extends Actor with InitializingBean {
+class MovementActor extends Actor with InitializingBean with LazyLogging {
   import context.dispatcher
-
-  private val RESPONSE_LENGTH = 10
 
   @Autowired private val serialAdapter:SerialAdapter = null
 
@@ -39,46 +39,69 @@ class MovementActor extends Actor with InitializingBean {
       listeners = listeners.filter(_ == event.getActorRef)
     case _:UpdateEvent =>
       if(listeners.nonEmpty) {
-        val updateScene: UpdatePosition = UpdatePosition(getPosition)
-        listeners.foreach(target => target ! updateScene)
+        val updateMovementState: UpdateMovementState = UpdateMovementState(getMovementState)
+        listeners.foreach(target => target ! updateMovementState)
       }
   }
 
-  def getPosition: Position = {
-    // Read the state from the Arduino (or simulate in simulation mode).
-    var readString:String = null
-    serialAdapter.send("#S")
-    readString = serialAdapter.read(RESPONSE_LENGTH)
-    // Parse the response.
-    val segments = readString.substring(2).split(":")
-    val servoPositionStrings = segments(0)
-    val eyeColorStrings = segments(1)
-    val irSensorString = segments(2).trim
-    // Convert the string values into numeric ones.
-    val numServos = servoPositionStrings.length / 3
-    val servoPositions = new Array[Int](numServos)
-    for(a <- 0 to 12) {
-      servoPositions(a) = Integer.valueOf(servoPositionStrings.substring(a * 3, (a + 1) * 3))
-    }
-    val numEyeColors = eyeColorStrings.length / 6
-    val eyeColors = new Array[Int](numEyeColors)
-    var i = 0
-    for(a <- 0 to 3) {
-      eyeColors(i) = Integer.valueOf(eyeColorStrings.substring(i * 6, (i + 1) * 6))
-    }
-    val irSensor = Integer.valueOf(irSensorString)
-    // Set the values in the position element.
-    val position = new Position
-    position.setTime(Calendar.getInstance())
-    position.setServoPositions(servoPositions)
-    position.setEyeColors(eyeColors)
-    position.setIrDistance(irSensor)
-    position
+  def getMovementState: MovementState = {
+    arduinoProtocol(BEFORE_FRAME)
   }
+
+  @tailrec private def arduinoProtocol(state: MovementActorState): MovementState = {
+    state match {
+      case BEFORE_FRAME =>
+        var curByte: Byte = 0
+        // Start reading bytes until we read the start byte.
+        do {
+          curByte = serialAdapter.readByte
+        } while (curByte != 0xFF.toByte)
+
+        // Continue if we read the start byte.
+        if(curByte == 0xFF.toByte) {
+          arduinoProtocol(FIRST_FF_BYTE_READ)
+        }
+        // Abort if the start byte wasn't read after at least 100 bytes.
+        else {
+          logger.debug("Giving up trying to find start of frame.")
+          null
+        }
+      case FIRST_FF_BYTE_READ =>
+        if (serialAdapter.readByte == 0xFF.toByte)
+          arduinoProtocol(HEADER_READ)
+        else
+          arduinoProtocol(BEFORE_FRAME)
+      case HEADER_READ =>
+        val positions: Array[Int] = new Array[Int](12)
+        for(i <- 0 to 11) {
+          val servoPosition:Int = serialAdapter.readWord
+          positions(i) = servoPosition
+        }
+        val eyeColors: Array[Int] = new Array[Int](3)
+        for(i <- 0 to 2) {
+          val eyeColor:Int = serialAdapter.readWord
+          eyeColors(i) = eyeColor
+        }
+        val irDistance:Int = serialAdapter.readWord
+
+        val movementState: MovementState = new MovementState()
+        movementState.setTime(Calendar.getInstance())
+        movementState.setServoPositions(positions)
+        movementState.setEyeColors(eyeColors)
+        movementState.setIrDistance(irDistance)
+        movementState
+    }
+  }
+
+
+  sealed abstract class MovementActorState
+  case object BEFORE_FRAME extends MovementActorState
+  case object FIRST_FF_BYTE_READ extends MovementActorState
+  case object HEADER_READ extends MovementActorState
 
 }
 
 object MovementActor {
-  case class UpdatePosition(position: Position) {}
+  case class UpdateMovementState(movementState: MovementState) {}
 }
 

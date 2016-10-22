@@ -6,6 +6,7 @@ package de.codecentric.iot.rapiro.movement.adapter;
 public interface SerialAdapter {
 
     void send(String command);
-    String read(int length);
+    byte readByte();
+    int readWord();
 
 }

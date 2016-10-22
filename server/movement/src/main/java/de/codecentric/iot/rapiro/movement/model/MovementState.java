@@ -5,17 +5,17 @@ import java.util.Calendar;
 /**
  * Created by christoferdutz on 21.09.16.
  */
-public class Position {
+public class MovementState {
 
     private Calendar time;
     private int[] servoPositions;
     private int[] eyeColors;
     private int irDistance;
 
-    public Position() {
+    public MovementState() {
     }
 
-    public Position(Calendar time, int[] servoPositions, int[] eyeColors, int irDistance) {
+    public MovementState(Calendar time, int[] servoPositions, int[] eyeColors, int irDistance) {
         this.time = time;
         this.servoPositions = servoPositions;
         this.eyeColors = eyeColors;

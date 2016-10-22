@@ -19,6 +19,7 @@ class StreamConfiguration extends InitializingBean {
 
   override def afterPropertiesSet(): Unit = {
     val debugActor = actorSystem.actorOf(Props[DebugActor], "debugActor")
+    val sceneDebugActor = actorSystem.actorOf(Props[SceneDebugActor], "sceneDebugActor")
 
     // Create all the actors used in this application.
     val movementActor: ActorRef = actorSystem.actorOf(
@@ -33,7 +34,7 @@ class StreamConfiguration extends InitializingBean {
 
     movementActor.tell(new AddListenerEvent(debugActor), null)
     telemetryActor.tell(new AddListenerEvent(debugActor), null)
-    visionActor.tell(new AddListenerEvent(debugActor), null)
+    visionActor.tell(new AddListenerEvent(sceneDebugActor), null)
     // Create any actors that process the stream.
 
 

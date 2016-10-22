@@ -1,0 +1,17 @@
+= Arduino development from within IntelliJ
+
+In order to develop, build and deploy the Arduino sketches from withing IntelliJ I had to setup a tool called `platformio`.
+
+   sudo pip install -U platformio
+
+After this I was able to build the Arduino sketch by telling Maven to execute the following command in the `compile` phase of the build:
+
+   platformio run
+
+In order to install the built application on the arduino, I highjacked the `deploy` phase of Maven:
+
+   platformio --target upload
+
+In order to make IntelliJ show me C and C++ syntax highligting, I went to `Preferences.../Editor/File types`, selected `C/C++` and added the extension `*.ino`
+
+Now I was ready to start building and deploying my Arduino sketches from within IntelliJ

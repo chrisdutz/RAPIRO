@@ -25,4 +25,8 @@ hs_err_pid*
 rebel.xml
 activemq-data/
 
+# Arduino stuff
+.pioenvs
+.piolibdeps
+
 # Created by .ignore support plugin (hsz.mobi)

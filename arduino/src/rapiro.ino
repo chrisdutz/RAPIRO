@@ -16,6 +16,7 @@
 
 int i = 0;
 int t = 1;
+uint8_t ui = 0;
 Servo servo[MAXSN];
 uint8_t eyes[3] = { 0, 0, 0};
 
@@ -45,10 +46,11 @@ int deltaBright[3] =      { 0, 0, 0};  // Initialize array to 0
 uint8_t bufferBright[3] = { 0, 0, 0};  // Initialize array to 0
 uint8_t tempBright[3] =   { 0, 0, 0};  // Initialize array to 0
 
-double startTime =   0;                // Motion start time(msec)
-double endTime =     0;                // Motion end time(msec)
-int remainingTime =  0;                // Motion remaining time(msec)
-uint8_t bufferTime = 0;                // Motion buffer time (0.1sec)
+double startTime =          0;         // Motion start time(msec)
+double endTime =            0;         // Motion end time(msec)
+int remainingTime =         0;         // Motion remaining time(msec)
+uint8_t bufferTime =        0;         // Motion buffer time (0.1sec)
+double nextStatusSendTime = 0;         // Time the next status has to be sent.
 
 uint8_t motionNumber = 0;
 uint8_t frameNumber = 0;
@@ -203,8 +205,6 @@ void setup()  {
   // Give everything some time to setup.
   delay(500);
 
-  Serial.print("Hello Chris");
-
   // Turn on the servos and the LEDs.
   pinMode(POWER, OUTPUT);
   digitalWrite(POWER, HIGH);
@@ -224,17 +224,9 @@ void loop()  {
           if(buf != ERR){
             motionNumber = buf;
             mode = 'M';
-
             // If the servos were turned off, turn them on now.
             digitalWrite(POWER, HIGH);
-
-            // Echo the command.
-            Serial.write("#M");
-            Serial.write(motionNumber);
-          } else {
-            Serial.write("#EM");
           }
-          Serial.write("\n");
           break;
 
         // Set all servos to a given position and LEDs to a given color.
@@ -243,82 +235,43 @@ void loop()  {
           if(buf != ERR) {
             mode = 'P';
             digitalWrite(POWER, HIGH);
-            Serial.write("#PT");
-            printThreeDigit(buf);
-          } else {
-            Serial.write("#EP");
           }
-          Serial.write("\n");
-          break;
-
-        // Tells what Rapiro is currently doing (Motion and rest-time, Pose and rest-time)
-        case 'Q':
-          Serial.write("#Q");
-          if(mode == 'M') {
-            Serial.write("M");
-            Serial.write(motionNumber);
-            Serial.write("T");
-            buf = (endTime-millis()) /100;
-            if(buf < 0) { buf = 0;}
-            printThreeDigit(buf);
-          }
-          if(mode == 'P') {
-            Serial.write("PT");
-            buf = (endTime-millis()) /100;
-            if(buf < 0) { buf = 0;}
-            printThreeDigit(buf);
-          }
-          Serial.write("\n");
-          break;
-
-        // Reports if Rapiro is finished moving ( TODO: I hope)
-        case 'C':
-          Serial.write("#C");
-          if(bufferTime > 0) {
-            Serial.write("F");
-          } else {
-            Serial.write("0");
-          }
-          Serial.write("\n");
-          break;
-
-        // Read the analog value of the IR sensor.
-        case 'A':
-          aval = analogRead(irPortNumber);
-          Serial.write("#A");
-          Serial.write(irPortNumber);
-          Serial.write("V");
-          Serial.write(int(aval));
-          Serial.write("\n");
           break;
 
         // Halt (Turns the power off all servos and LEDs).
         case 'H':
-          Serial.write("#H\n");
           digitalWrite(POWER, LOW);
           break;
 
-        // Output the current positions of each servo as well as the analog ir value.
-        case 'S':
-          Serial.write("#S");
-          for( i = 0; i < MAXSN; i++) {
-            Serial.write((nowAngle[i] >> SHIFT) + trim[i]);
-            Serial.write(":");
-          }
-          for(i = 0; i < 3; i++) {
-            Serial.write(nowBright[i]);
-            Serial.write(":");
-          }
-          aval = analogRead(irPortNumber);
-          Serial.write(int(aval));
-          Serial.write("\n");
-          break;
-
         default:
-          Serial.write("#E\n");
           break;
       }
     }
+  }
+
+  // Output the current positions of each servo as well as the analog ir value.
+  // Each frame is started by a word of 0xFFFF because the values of the following
+  // values should never have a value of 0xFF.
+  if(nextStatusSendTime < millis()) {
+    // Output the frame header.
+    writeWord(0xFFFF);
+
+    // Output the values for all 12 servos.
+    for( i = 0; i < MAXSN; i++) {
+        writeWord((nowAngle[i] >> SHIFT) + trim[i]);
+    }
+
+    // Output the values for all 3 leds.
+    for(i = 0; i < 3; i++) {
+        writeWord(nowBright[i]);
+    }
+
+    // Output the value of the ir sensor.
+    aval = analogRead(irPortNumber);
+    writeWord(int(aval));
+
+    // Tell the system to send the next update in 250ms (4 Updates/Second)
+    nextStatusSendTime = millis() + 250;
   }
 
   // If the movement isn't finished yet, update the new servo angles and LED brightnesses.
@@ -523,10 +476,6 @@ int getPose() {
   return buf;
 }
 
-void printThreeDigit(int buf) {
-  Serial.write(buf);
-}
-
 int digit;
 //Read ASCII Three-digit
 int readThreeDigit(int maximum) {
@@ -560,4 +509,12 @@ int readOneDigit() {
     buf = ERR;
   }
   return buf;
+}
+
+void writeWord(uint16_t intValue) {
+    uint16_t mask   = B11111111;          // 0000 0000 1111 1111
+    uint8_t first_half   = intValue >> 8;   // >>>> >>>> 0001 0110
+    uint8_t second_half = intValue & mask; // ____ ____ 0100 0111
+    Serial.write(first_half);
+    Serial.write(second_half);
 }

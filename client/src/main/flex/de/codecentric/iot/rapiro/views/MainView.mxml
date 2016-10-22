@@ -83,7 +83,7 @@
 
     <fx:Script>
         <![CDATA[
-        import de.codecentric.iot.rapiro.movement.model.Position;
+        import de.codecentric.iot.rapiro.movement.model.MovementState;
         import de.codecentric.iot.rapiro.telemetry.model.TelemetryData;
         import de.codecentric.iot.rapiro.vision.model.Scene;
         import de.codecentric.iot.rapiro.vision.model.Block;
@@ -179,7 +179,7 @@
         }
 
         protected function onPositionEvent(event:MessageEvent):void {
-            if (event.message.body is Position) {
+            if (event.message.body is MovementState) {
                 trace(event.message.body);
             }
         }

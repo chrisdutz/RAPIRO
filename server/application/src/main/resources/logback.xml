@@ -9,7 +9,7 @@
     </encoder>
   </appender>
 
-  <logger name="de.codecentric" level="debug" additivity="false">
+  <logger name="de.codecentric" level="trace" additivity="false">
     <appender-ref ref="STDOUT" />
   </logger>
 

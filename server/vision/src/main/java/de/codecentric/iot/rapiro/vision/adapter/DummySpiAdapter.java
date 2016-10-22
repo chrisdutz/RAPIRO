@@ -10,14 +10,14 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Profile("dummy")
-public class DummyVisionAdapter implements VisionAdapter {
+public class DummySpiAdapter implements SpiAdapter {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DummyVisionAdapter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DummySpiAdapter.class);
 
     private byte[] protocol;
     private int pos;
 
-    public DummyVisionAdapter() {
+    public DummySpiAdapter() {
         protocol = new byte[] {(byte) 0x00, (byte) 0x00, (byte) 0x00,
                 (byte) 0xAA, (byte) 0x55, (byte) 0xAA, (byte) 0x55,
                 (byte) 0x01, (byte) 0x76, (byte) 0x00, (byte) 0x02,

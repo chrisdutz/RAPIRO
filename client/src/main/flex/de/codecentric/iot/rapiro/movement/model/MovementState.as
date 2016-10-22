@@ -7,7 +7,7 @@
 
 package de.codecentric.iot.rapiro.movement.model {
 
-    [RemoteClass(alias="de.codecentric.iot.rapiro.movement.model.Position")]
-    public class Position extends PositionBase {
+    [RemoteClass(alias="de.codecentric.iot.rapiro.movement.model.MovementState")]
+    public class MovementState extends MovementStateBase {
     }
 }
