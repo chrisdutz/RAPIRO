@@ -1,25 +1,26 @@
 package de.codecentric.iot.rapiro.streams
 
-import akka.actor.{ActorRef, ActorSystem, Props}
-import akka.stream.Materializer
-import akka.stream.scaladsl.Sink
+import akka.actor.{ActorRef, ActorSystem}
 import de.codecentric.iot.rapiro.akka.SpringExtension
 import de.codecentric.iot.rapiro.akka.events.AddListenerEvent
+import flex.messaging.MessageBroker
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
+import org.springframework.flex.messaging.MessageTemplate
 
 @Configuration
 class StreamConfiguration extends InitializingBean {
 
   @Autowired private val actorSystem: ActorSystem = null
 
-  @Autowired private implicit val materializer: Materializer = null
-
+  // Just to make sure the blazeds stuff is initialized first.
+  @Autowired private val messageBroker: MessageBroker = null
+  @Autowired private val messageTemplate: MessageTemplate = null
 
   override def afterPropertiesSet(): Unit = {
-    val debugActor = actorSystem.actorOf(Props[DebugActor], "debugActor")
-    val sceneDebugActor = actorSystem.actorOf(Props[SceneDebugActor], "sceneDebugActor")
+    //val debugActor = actorSystem.actorOf(Props[DebugActor], "debugActor")
+    //val sceneDebugActor = actorSystem.actorOf(Props[SceneDebugActor], "sceneDebugActor")
 
     // Create all the actors used in this application.
     val movementActor: ActorRef = actorSystem.actorOf(
@@ -28,39 +29,26 @@ class StreamConfiguration extends InitializingBean {
     val telemetryActor: ActorRef = actorSystem.actorOf(
       SpringExtension.SpringExtProvider.get(actorSystem).props("telemetryActor")
     )
-    val visionActor:ActorRef = actorSystem.actorOf(
+    val visionActor: ActorRef = actorSystem.actorOf(
       SpringExtension.SpringExtProvider.get(actorSystem).props("visionActor")
     )
 
-    movementActor.tell(new AddListenerEvent(debugActor), null)
-    telemetryActor.tell(new AddListenerEvent(debugActor), null)
-    visionActor.tell(new AddListenerEvent(sceneDebugActor), null)
-    // Create any actors that process the stream.
-
-
-
     // Create any actors that will publish events to BlazeDS topics.
-    val movementPublisherSink = Sink.actorSubscriber(
+    val movementPublisherSink: ActorRef = actorSystem.actorOf(
       SpringExtension.SpringExtProvider.get(actorSystem).props("movementPublishingActor")
     )
-    val telemetryPublisherSink = Sink.actorSubscriber(
+    val telemetryPublisherSink: ActorRef = actorSystem.actorOf(
       SpringExtension.SpringExtProvider.get(actorSystem).props("telemetryPublishingActor")
     )
-    val visionPublisherSink = Sink.actorSubscriber(
+    val visionPublisherSink: ActorRef = actorSystem.actorOf(
       SpringExtension.SpringExtProvider.get(actorSystem).props("visionPublishingActor")
     )
 
+    // Connect the actors
+    movementActor.tell(new AddListenerEvent(movementPublisherSink), null)
+    telemetryActor.tell(new AddListenerEvent(telemetryPublisherSink), null)
+    visionActor.tell(new AddListenerEvent(visionPublisherSink), null)
 
-    // Define the flows
-    //val movementFlow = movementActorSource to movementPublisherSink
-    //val telemetryFlow = telemetryActorSource to telemetryPublisherSink
-    //val visionFlow = visionActorSource to visionPublisherSink
-
-
-    // Start the flows
-    //movementFlow.run()
-    //telemetryFlow.run()
-    //visionFlow.run()
   }
 
 }

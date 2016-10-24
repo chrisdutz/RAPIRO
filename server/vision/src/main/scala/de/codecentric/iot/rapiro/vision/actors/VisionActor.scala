@@ -3,8 +3,11 @@ package de.codecentric.iot.rapiro.vision.actors
 import java.util.Calendar
 
 import akka.actor.{Actor, ActorRef}
+import com.typesafe.scalalogging._
+import de.codecentric.iot.rapiro.akka.ItemEvent
 import de.codecentric.iot.rapiro.akka.events.{AddListenerEvent, RemoveListenerEvent, UpdateEvent}
 import de.codecentric.iot.rapiro.vision.actors.VisionActor.UpdateScene
+import de.codecentric.iot.rapiro.vision.adapter.SpiAdapter
 import de.codecentric.iot.rapiro.vision.model.{Block, ColorBlock, Scene}
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.beans.factory.annotation.Autowired
@@ -12,17 +15,14 @@ import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
 
 import scala.annotation.tailrec
-import scala.collection.JavaConversions._
 import scala.concurrent.duration.DurationInt
-import com.typesafe.scalalogging._
-import de.codecentric.iot.rapiro.vision.adapter.SpiAdapter
 
 /**
   * Created by christoferdutz on 19.10.16.
   */
 @Scope ("prototype")
 @Component ("visionActor")
-class VisionActor() extends Actor with InitializingBean with LazyLogging {
+class VisionActor() extends Actor with LazyLogging with InitializingBean {
   import context.dispatcher
 
   @Autowired private val spiAdapter: SpiAdapter = null
@@ -31,6 +31,7 @@ class VisionActor() extends Actor with InitializingBean with LazyLogging {
 
   override def afterPropertiesSet(): Unit = {
     context.system.scheduler.schedule(5 seconds, 1 seconds, self, new UpdateEvent())
+    logger.info("Scheduled VisionActor")
   }
 
   override def receive: Receive = {
@@ -39,23 +40,26 @@ class VisionActor() extends Actor with InitializingBean with LazyLogging {
     case event:RemoveListenerEvent =>
       listeners = listeners.filter(_ == event.getActorRef)
     case _:UpdateEvent =>
-      if(listeners.nonEmpty) {
-        val scene:Scene = getScene
-        val updateScene: UpdateScene = UpdateScene(scene)
-        listeners.foreach(target => target ! updateScene)
+      try {
+        if(listeners.nonEmpty) {
+          val scene:Scene = getScene
+          val updateScene: UpdateScene = UpdateScene(scene)
+          listeners.foreach(target => target ! updateScene)
+        }
+      } catch {
+        case e: Exception => logger.error("An error occurred while processing incoming update event.", e)
       }
   }
 
   def getScene: Scene = {
-    val blocks: List[Block] = yCamProtocol(BEFORE_FRAME)
+    val blocks: Array[Block] = yCamProtocol(BEFORE_FRAME)
     val scene: Scene = new Scene
     scene.setTime(Calendar.getInstance())
-    val javaBlocks: java.util.List[Block] = seqAsJavaList(blocks)
-    scene.setBlocks(javaBlocks)
+    scene.setBlocks(blocks)
     scene
   }
 
-  @tailrec private def yCamProtocol(state: VisionActorState, blocks: List[Block] = null): List[Block] = {
+  @tailrec private def yCamProtocol(state: VisionActorState, blocks: Array[Block] = null): Array[Block] = {
     state match {
       case BEFORE_FRAME =>
         var curByte: Byte = 0
@@ -104,9 +108,9 @@ class VisionActor() extends Actor with InitializingBean with LazyLogging {
         block.setHeight(spiAdapter.readWord)
         if (block.getChecksum == checksum) {
           if(blocks == null) {
-            yCamProtocol(FIRST_55_BYTE_READ, List[Block](block))
+            yCamProtocol(FIRST_55_BYTE_READ, Array[Block](block))
           } else {
-            yCamProtocol(FIRST_55_BYTE_READ, block :: blocks)
+            yCamProtocol(FIRST_55_BYTE_READ, blocks :+ block)
           }
         } else {
           yCamProtocol(FIRST_55_BYTE_READ, blocks)
@@ -122,9 +126,9 @@ class VisionActor() extends Actor with InitializingBean with LazyLogging {
         colorBlock.setAngle(spiAdapter.readWord)
         if (colorBlock.getChecksum == checksum) {
           if(blocks == null) {
-            yCamProtocol(FIRST_55_BYTE_READ, List[Block](colorBlock))
+            yCamProtocol(FIRST_55_BYTE_READ, Array[Block](colorBlock))
           } else {
-            yCamProtocol(FIRST_55_BYTE_READ, colorBlock :: blocks)
+            yCamProtocol(FIRST_55_BYTE_READ, blocks :+ colorBlock)
           }
         } else {
           yCamProtocol(FIRST_55_BYTE_READ, blocks)
@@ -141,5 +145,7 @@ class VisionActor() extends Actor with InitializingBean with LazyLogging {
 }
 
 object VisionActor {
-  case class UpdateScene(scene:Scene) {}
+  case class UpdateScene(scene:Scene) extends ItemEvent[Scene] {
+    override def getItem: Scene = scene
+  }
 }

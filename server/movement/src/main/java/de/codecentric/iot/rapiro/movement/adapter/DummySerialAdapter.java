@@ -12,8 +12,6 @@ import org.springframework.stereotype.Component;
 @Profile("dummy")
 public class DummySerialAdapter implements SerialAdapter {
 
-    private static final String DUMMY_RESPONSE = "#S090091004130090180044090094088086094:000000000000032640:000432\n";
-
     private static final Logger LOG = LoggerFactory.getLogger(DummySerialAdapter.class);
 
     private byte[] protocol;
@@ -21,7 +19,7 @@ public class DummySerialAdapter implements SerialAdapter {
 
     public DummySerialAdapter() {
         protocol = new byte[] {(byte) 0x00, (byte) 0x00, (byte) 0x00,
-                (byte) 0xAA, (byte) 0x55, (byte) 0xAA, (byte) 0x55,
+                (byte) 0xFF, (byte) 0xFF, (byte) 0xAA, (byte) 0x55,
                 (byte) 0x01, (byte) 0x76, (byte) 0x00, (byte) 0x02,
                 (byte) 0x00, (byte) 0x8F, (byte) 0x00, (byte) 0x96,
                 (byte) 0x00, (byte) 0x30, (byte) 0x00, (byte) 0x1F,

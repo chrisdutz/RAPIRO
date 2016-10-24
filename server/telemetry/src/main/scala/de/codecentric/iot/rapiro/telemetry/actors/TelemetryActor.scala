@@ -1,6 +1,8 @@
 package de.codecentric.iot.rapiro.telemetry.actors
 
 import akka.actor.{Actor, ActorRef}
+import com.typesafe.scalalogging.LazyLogging
+import de.codecentric.iot.rapiro.akka.ItemEvent
 import de.codecentric.iot.rapiro.akka.events.{AddListenerEvent, RemoveListenerEvent, UpdateEvent}
 import de.codecentric.iot.rapiro.telemetry.actors.TelemetryActor.UpdateTelemetryData
 import de.codecentric.iot.rapiro.telemetry.model.TelemetryData
@@ -16,7 +18,7 @@ import scala.concurrent.duration.DurationInt
   */
 @Scope ("prototype")
 @Component ("telemetryActor")
-class TelemetryActor extends Actor with InitializingBean {
+class TelemetryActor extends Actor with LazyLogging with InitializingBean {
   import context.dispatcher
 
   var listeners: List[ActorRef] = List[ActorRef]()
@@ -25,6 +27,7 @@ class TelemetryActor extends Actor with InitializingBean {
 
   override def afterPropertiesSet(): Unit = {
     context.system.scheduler.schedule(5 seconds, 1 seconds, self, new UpdateEvent())
+    logger.info("Scheduled TelemetryActor")
   }
 
   override def receive: Receive = {
@@ -33,9 +36,13 @@ class TelemetryActor extends Actor with InitializingBean {
     case event:RemoveListenerEvent =>
       listeners = listeners.filter(_ == event.getActorRef)
     case _:UpdateEvent =>
-      if(listeners.nonEmpty) {
-        val updateScene: UpdateTelemetryData = UpdateTelemetryData(getTelemetryData)
-        listeners.foreach(target => target ! updateScene)
+      try {
+        if(listeners.nonEmpty) {
+          val updateScene: UpdateTelemetryData = UpdateTelemetryData(getTelemetryData)
+          listeners.foreach(target => target ! updateScene)
+        }
+      } catch {
+        case e: Exception => logger.error("An error occurred while processing incoming update event.", e)
       }
   }
 
@@ -51,7 +58,9 @@ class TelemetryActor extends Actor with InitializingBean {
 }
 
 object TelemetryActor {
-  case class UpdateTelemetryData(telemetryData: TelemetryData) {}
+  case class UpdateTelemetryData(telemetryData: TelemetryData) extends ItemEvent[TelemetryData] {
+    override def getItem: TelemetryData = telemetryData
+  }
 }
 
 

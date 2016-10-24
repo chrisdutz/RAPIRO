@@ -62,8 +62,8 @@
             <s:method name="stop" result="onResult(event)"/>
         </s:RemoteObject>
 
-        <s:Consumer id="positionEvents"
-                    destination="positionEvents"
+        <s:Consumer id="movementEvents"
+                    destination="movementEvents"
                     channelSet="{channelSet}"
                     fault="onMessageFault(event)"
                     message="onPositionEvent(event)"/>
@@ -105,7 +105,7 @@
         private var cpuLoad:Number;
 
         protected function onCreationComplete(event:FlexEvent):void {
-            positionEvents.subscribe();
+            movementEvents.subscribe();
             telemetryEvents.subscribe();
             visionEvents.subscribe();
         }

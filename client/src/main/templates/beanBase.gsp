@@ -29,7 +29,6 @@
         if (jImport.as3Type.hasPackage()) {
             // BlazeDS uses ArrayCollections instead of ListCollectionVies
             if(jImport.as3Type.qualifiedName == "mx.collections.ListCollectionView") {
-                as3Imports.add("mx.collections.ArrayCollection");
             }
             // BlazeDS uses Object instead of IMap for communicating Maps.
             // As Object needs no import, simply omit the import.
@@ -92,7 +91,7 @@ package ${jClass.as3Type.packageName} {
 
     for (jProperty in jClass.properties) {
         if(jProperty.as3Type.name == "ListCollectionView") { %>
-        private var _${jProperty.name}:ArrayCollection;<%
+        private var _${jProperty.name}:Array;<%
         } else if(jProperty.as3Type.name == "IMap") { %>
         private var _${jProperty.name}:Object;<%
         } else { %>
@@ -108,7 +107,7 @@ package ${jClass.as3Type.packageName} {
 <%
             if (jProperty.writable) {
                 if(jProperty.as3Type.name == "ListCollectionView") {%>
-        public function set ${jProperty.name}(value:ArrayCollection):void {
+        public function set ${jProperty.name}(value:Array):void {
             _${jProperty.name} = value;
         }<%
                 } else if(jProperty.as3Type.name == "IMap") {%>
@@ -123,7 +122,7 @@ package ${jClass.as3Type.packageName} {
             }
             if (jProperty.readable) {
                 if(jProperty.as3Type.name == "ListCollectionView") {%>
-        public function get ${jProperty.name}():ArrayCollection {
+        public function get ${jProperty.name}():Array {
             return _${jProperty.name};
         }<%
                 } else if(jProperty.as3Type.name == "IMap") {%>

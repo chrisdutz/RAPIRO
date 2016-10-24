@@ -3,6 +3,7 @@ package de.codecentric.iot.rapiro.blazeds;
 import flex.messaging.MessageBroker;
 import flex.messaging.io.SerializationContext;
 import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.flex.messaging.MessageTemplate;
@@ -23,7 +24,7 @@ public class BlazeDsConfig {
         return messageTemplate;
     }
 
-    //@PostConstruct
+    @PostConstruct
     public void configureSerializationContext() {
         //ThreadLocal SerializationContent
         SerializationContext serializationContext = SerializationContext.getSerializationContext();

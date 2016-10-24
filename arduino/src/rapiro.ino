@@ -258,7 +258,7 @@ void loop()  {
 
     // Output the values for all 12 servos.
     for( i = 0; i < MAXSN; i++) {
-        writeWord((nowAngle[i] >> SHIFT) + trim[i]);
+        writeWord((nowAngle[i] >> SHIFT));
     }
 
     // Output the values for all 3 leds.

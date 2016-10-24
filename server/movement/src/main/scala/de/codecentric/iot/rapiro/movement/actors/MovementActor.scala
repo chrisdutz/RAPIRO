@@ -15,13 +15,14 @@ import org.springframework.stereotype.Component
 import scala.annotation.tailrec
 import scala.concurrent.duration.DurationInt
 import com.typesafe.scalalogging._
+import de.codecentric.iot.rapiro.akka.ItemEvent
 
 /**
   * Created by christoferdutz on 19.10.16.
   */
 @Scope("prototype")
 @Component("movementActor")
-class MovementActor extends Actor with InitializingBean with LazyLogging {
+class MovementActor extends Actor with LazyLogging with InitializingBean {
   import context.dispatcher
 
   @Autowired private val serialAdapter:SerialAdapter = null
@@ -30,6 +31,7 @@ class MovementActor extends Actor with InitializingBean with LazyLogging {
 
   override def afterPropertiesSet(): Unit = {
     context.system.scheduler.schedule(5 seconds, 1 seconds, self, new UpdateEvent())
+    logger.info("Scheduled MovementActor")
   }
 
   override def receive: Receive = {
@@ -38,9 +40,13 @@ class MovementActor extends Actor with InitializingBean with LazyLogging {
     case event:RemoveListenerEvent =>
       listeners = listeners.filter(_ == event.getActorRef)
     case _:UpdateEvent =>
-      if(listeners.nonEmpty) {
-        val updateMovementState: UpdateMovementState = UpdateMovementState(getMovementState)
-        listeners.foreach(target => target ! updateMovementState)
+      try {
+        if (listeners.nonEmpty) {
+          val updateMovementState: UpdateMovementState = UpdateMovementState(getMovementState)
+          listeners.foreach(target => target ! updateMovementState)
+        }
+      } catch {
+        case e: Exception => logger.error("An error occurred while processing incoming update event.", e)
       }
   }
 
@@ -102,6 +108,10 @@ class MovementActor extends Actor with InitializingBean with LazyLogging {
 }
 
 object MovementActor {
-  case class UpdateMovementState(movementState: MovementState) {}
+  case class UpdateMovementState(movementState: MovementState) extends ItemEvent[MovementState] {
+    override def getItem: MovementState = {
+      movementState
+    }
+  }
 }
 
