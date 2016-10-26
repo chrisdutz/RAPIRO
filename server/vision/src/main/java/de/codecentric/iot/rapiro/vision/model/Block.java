@@ -63,6 +63,28 @@ public class Block implements Serializable {
         this.height = height;
     }
 
+    public int getSurfaceSize() {
+        return getWidth() * getHeight();
+    }
+
+    public boolean intersects(Block other) {
+        return (signature == other.signature) &&
+                (x < other.x + other.width) && (x + width > other.x) &&
+                (y < other.y + other.height) && (y + height > other.y);
+    }
+
+    public Block unite(Block other) {
+        int leftBound = Math.min(x - (width / 2), other.x - (other.width / 2));
+        int rightBound = Math.max(x + (width / 2), other.x + (other.width / 2));
+        int topBound = Math.min(y - (height / 2), other.y - (other.height / 2));
+        int bottomBound = Math.max(y + (height / 2), other.y + (other.height / 2));
+        int unityWidth = rightBound - leftBound;
+        int unityHeight = bottomBound - topBound;
+        int unityX = leftBound + (unityWidth / 2);
+        int unityY = topBound + (unityHeight / 2);
+        return new Block(signature, unityX, unityY, unityWidth, unityHeight);
+    }
+
     @Override
     public String toString() {
         return "Block{" +

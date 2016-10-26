@@ -27,10 +27,12 @@ class VisionActor() extends Actor with LazyLogging with InitializingBean {
 
   @Autowired private val spiAdapter: SpiAdapter = null
 
+  var running: Boolean = false
+
   var listeners:List[ActorRef] = List[ActorRef]()
 
   override def afterPropertiesSet(): Unit = {
-    context.system.scheduler.schedule(5 seconds, 1 seconds, self, new UpdateEvent())
+    context.system.scheduler.schedule(5 seconds, 100 millis, self, new UpdateEvent())
     logger.info("Scheduled VisionActor")
   }
 
@@ -40,14 +42,19 @@ class VisionActor() extends Actor with LazyLogging with InitializingBean {
     case event:RemoveListenerEvent =>
       listeners = listeners.filter(_ == event.getActorRef)
     case _:UpdateEvent =>
-      try {
-        if(listeners.nonEmpty) {
-          val scene:Scene = getScene
-          val updateScene: UpdateScene = UpdateScene(scene)
-          listeners.foreach(target => target ! updateScene)
+      if(!running) {
+        try {
+          running = true
+          if (listeners.nonEmpty) {
+            val scene: Scene = getScene
+            val updateScene: UpdateScene = UpdateScene(scene)
+            listeners.foreach(target => target ! updateScene)
+          }
+        } catch {
+          case e: Exception => logger.error("An error occurred while processing incoming update event.", e)
+        } finally {
+          running = false
         }
-      } catch {
-        case e: Exception => logger.error("An error occurred while processing incoming update event.", e)
       }
   }
 
@@ -68,10 +75,11 @@ class VisionActor() extends Actor with LazyLogging with InitializingBean {
         do {
           curByte = spiAdapter.readByte
           bytesRead += 1
-        } while ((curByte != 0xAA.toByte) && (bytesRead < 100))
+        } while (curByte != 0xAA.toByte)
 
         // Continue if we read the start byte.
         if(curByte == 0xAA.toByte) {
+          logger.info("Read block start after {} empty chars", bytesRead)
           yCamProtocol(FIRST_AA_BYTE_READ, blocks)
         }
         // Abort if the start byte wasn't read after at least 100 bytes.
@@ -106,7 +114,7 @@ class VisionActor() extends Actor with LazyLogging with InitializingBean {
         block.setY(spiAdapter.readWord)
         block.setWidth(spiAdapter.readWord)
         block.setHeight(spiAdapter.readWord)
-        if (block.getChecksum == checksum) {
+        if ((block.getSurfaceSize > 100) && (block.getChecksum == checksum)) {
           if(blocks == null) {
             yCamProtocol(FIRST_55_BYTE_READ, Array[Block](block))
           } else {

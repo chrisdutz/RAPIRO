@@ -46,6 +46,10 @@ public class MovementService implements ApplicationListener<ContextRefreshedEven
         serialAdapter.send("#M2");
     }
 
+    public void turnHead(int value) {
+        serialAdapter.send("#PS00A" + String.format("%03d", value) + "T010");
+    }
+
     public void powerDown() {
         LOG.info("Movement: Power Down");
         serialAdapter.send("#H0");
@@ -56,6 +60,15 @@ public class MovementService implements ApplicationListener<ContextRefreshedEven
      * @param applicationEvent the spring {@link ContextRefreshedEvent} instance
      */
     public void onApplicationEvent(ContextRefreshedEvent applicationEvent) {
+        // Initialize all servos to default positions.
+        serialAdapter.send("#M0");
+        // Give Rapiro some time to position.
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            // Ignore.
+        }
+        // Power down all servos.
         powerDown();
     }
 
