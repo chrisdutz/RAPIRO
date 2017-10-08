@@ -102,6 +102,8 @@ class PlcActor extends Actor with LazyLogging with InitializingBean {
     if(!connected) {
       connect()
     }
+    val data:PlcData = new PlcData
+    data.setConnected(connected)
     if(connected) {
       // Read the input area
       val inputBuffer: Array[Byte] = new Array[Byte](65536) // 64K buffer (maximum for S7400 systems)
@@ -121,12 +123,10 @@ class PlcActor extends Actor with LazyLogging with InitializingBean {
         return null
       }
 
-      val data:PlcData = new PlcData
       data.setInput(inputBuffer.apply(0))
       data.setOutput(outputBuffer.apply(0))
-      return data
     }
-    null
+    data
   }
 
 }

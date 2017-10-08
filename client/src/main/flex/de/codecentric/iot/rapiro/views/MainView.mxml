@@ -11,6 +11,11 @@
         [ResourceBundle("rapiro")]
     </fx:Metadata>
 
+    <s:states>
+        <s:State name="default"/>
+        <s:State name="connected"/>
+    </s:states>
+
     <fx:Declarations>
         <s:ChannelSet id="channelSet">
             <!--s:StreamingAMFChannel id="streamingChannel"
@@ -68,6 +73,12 @@
                     fault="onMessageFault(event)"
                     message="onPositionEvent(event)"/>
 
+        <s:Consumer id="plcEvents"
+                    destination="plcEvents"
+                    channelSet="{channelSet}"
+                    fault="onMessageFault(event)"
+                    message="onPlcEvent(event)"/>
+
         <s:Consumer id="telemetryEvents"
                     destination="telemetryEvents"
                     channelSet="{channelSet}"
@@ -84,6 +95,7 @@
     <fx:Script>
         <![CDATA[
         import de.codecentric.iot.rapiro.movement.model.MovementState;
+        import de.codecentric.iot.rapiro.plc.model.PlcData;
         import de.codecentric.iot.rapiro.telemetry.model.TelemetryData;
         import de.codecentric.iot.rapiro.vision.model.Scene;
         import de.codecentric.iot.rapiro.vision.model.Block;
@@ -104,8 +116,12 @@
         [Bindable]
         private var cpuLoad:Number;
 
+        [Bindable]
+        private var connected:Boolean;
+
         protected function onCreationComplete(event:FlexEvent):void {
             movementEvents.subscribe();
+            plcEvents.subscribe();
             telemetryEvents.subscribe();
             visionEvents.subscribe();
         }
@@ -168,7 +184,6 @@
                 for each(var block:Block in scene.blocks) {
                     var rect:Rect = new Rect();
                     rect.stroke = new SolidColorStroke(0x000000);
-                    rect.fill = new SolidColor(0x00FF00);
 
                     var horizontalScale:Number = vision.width / scene.width;
                     var verticalScale:Number = vision.height / scene.height;
@@ -191,6 +206,14 @@
         protected function onPositionEvent(event:MessageEvent):void {
             if (event.message.body is MovementState) {
                 trace(event.message.body);
+            }
+        }
+
+        protected function onPlcEvent(event:MessageEvent):void {
+            if (event.message.body is PlcData) {
+                var plcData:PlcData = PlcData(event.message.body);
+                connected = plcData.connected;
+                currentState = connected ? "connected" : "default";
             }
         }
 
@@ -219,6 +242,9 @@
                 <s:stroke>
                     <s:SolidColorStroke color="0x000000"/>
                 </s:stroke>
+                <s:fill>
+                    <s:SolidColor color="green" color.connected="red"/>
+                </s:fill>
             </s:Rect>
             <s:Group id="vision" width="320" height="200">
                 <s:layout>

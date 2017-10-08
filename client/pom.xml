@@ -34,6 +34,7 @@
                         <configuration>
                             <includeJavaClasses>
                                 <class>de.codecentric.iot.rapiro.movement.model.*</class>
+                                <class>de.codecentric.iot.rapiro.plc.model.*</class>
                                 <class>de.codecentric.iot.rapiro.telemetry.model.*</class>
                                 <class>de.codecentric.iot.rapiro.vision.model.*</class>
                             </includeJavaClasses>
@@ -186,6 +187,12 @@
         <dependency>
             <groupId>de.codecentric.iot.rapiro</groupId>
             <artifactId>rapiro-server-movement</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.codecentric.iot.rapiro</groupId>
+            <artifactId>rapiro-server-plc</artifactId>
             <version>1.0.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>

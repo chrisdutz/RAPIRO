@@ -26,14 +26,14 @@ class StreamConfiguration extends InitializingBean {
     val movementActor: ActorRef = actorSystem.actorOf(
       SpringExtension.SpringExtProvider.get(actorSystem).props("movementActor")
     )
+    val plcActor: ActorRef = actorSystem.actorOf(
+      SpringExtension.SpringExtProvider.get(actorSystem).props("plcActor")
+    )
     val telemetryActor: ActorRef = actorSystem.actorOf(
       SpringExtension.SpringExtProvider.get(actorSystem).props("telemetryActor")
     )
     val visionActor: ActorRef = actorSystem.actorOf(
       SpringExtension.SpringExtProvider.get(actorSystem).props("visionActor")
-    )
-    val plcActor: ActorRef = actorSystem.actorOf(
-      SpringExtension.SpringExtProvider.get(actorSystem).props("plcActor")
     )
 
     /*val objectTrackerActor: ActorRef = actorSystem.actorOf(
@@ -52,6 +52,9 @@ class StreamConfiguration extends InitializingBean {
     val movementPublisherSink: ActorRef = actorSystem.actorOf(
       SpringExtension.SpringExtProvider.get(actorSystem).props("movementPublishingActor")
     )
+    val plcPublisherSink: ActorRef = actorSystem.actorOf(
+      SpringExtension.SpringExtProvider.get(actorSystem).props("plcDataPublishingActor")
+    )
     val telemetryPublisherSink: ActorRef = actorSystem.actorOf(
       SpringExtension.SpringExtProvider.get(actorSystem).props("telemetryPublishingActor")
     )
@@ -64,9 +67,10 @@ class StreamConfiguration extends InitializingBean {
     //movementActor.tell(new AddListenerEvent(lookAtOmNomResponse), null)
 
     movementActor.tell(new AddListenerEvent(movementPublisherSink), null)
+    plcActor.tell(new AddListenerEvent(plcPublisherSink), null)
+    plcActor.tell(new AddListenerEvent(dalekResponse), null)
     telemetryActor.tell(new AddListenerEvent(telemetryPublisherSink), null)
     visionActor.tell(new AddListenerEvent(visionPublisherSink), null)
-    plcActor.tell(new AddListenerEvent(dalekResponse), null)
 
     //visionActor.tell(new AddListenerEvent(sceneDebugActor), null)
 
