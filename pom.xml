@@ -30,20 +30,24 @@
         <java.version>1.8</java.version>
 
         <!-- Flex related properties -->
-        <flex.version>4.15.0</flex.version>
-        <air.version>20.0</air.version>
-        <flexmojos.version>7.1.0</flexmojos.version>
+        <flex.version>4.16.0</flex.version>
+        <air.version>23.0</air.version>
+        <flexmojos.version>7.2.0-SNAPSHOT</flexmojos.version>
         <apparat.version>1.0-RC9</apparat.version>
     </properties>
 
     <prerequisites>
-        <maven>${maven.version}</maven>
+        <!--maven>${maven.version}</maven-->
     </prerequisites>
 
     <modules>
-        <module>arduino</module>
+        <!--module>arduino</module-->
         <module>client</module>
         <module>server</module>
+
+        <!--module>test</module-->
+        <!--module>test-javacv</module-->
+        <module>test-opencv</module>
 
         <!--module>j2mod</module>
         <module>moka7</module-->

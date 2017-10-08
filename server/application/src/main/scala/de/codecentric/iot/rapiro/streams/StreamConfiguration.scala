@@ -32,13 +32,20 @@ class StreamConfiguration extends InitializingBean {
     val visionActor: ActorRef = actorSystem.actorOf(
       SpringExtension.SpringExtProvider.get(actorSystem).props("visionActor")
     )
-
-    val objectTrackerActor: ActorRef = actorSystem.actorOf(
-      SpringExtension.SpringExtProvider.get(actorSystem).props("objectTrackerActor")
+    val plcActor: ActorRef = actorSystem.actorOf(
+      SpringExtension.SpringExtProvider.get(actorSystem).props("plcActor")
     )
 
-    val lookAtOmNomResponse: ActorRef = actorSystem.actorOf(
+    /*val objectTrackerActor: ActorRef = actorSystem.actorOf(
+      SpringExtension.SpringExtProvider.get(actorSystem).props("objectTrackerActor")
+    )*/
+
+    /*val lookAtOmNomResponse: ActorRef = actorSystem.actorOf(
       SpringExtension.SpringExtProvider.get(actorSystem).props("lookAtOmNomResponse")
+    )*/
+
+    val dalekResponse: ActorRef = actorSystem.actorOf(
+      SpringExtension.SpringExtProvider.get(actorSystem).props("dalekResponse")
     )
 
     // Create any actors that will publish events to BlazeDS topics.
@@ -53,14 +60,15 @@ class StreamConfiguration extends InitializingBean {
     )
 
     // Connect the actors
-    visionActor.tell(new AddListenerEvent(objectTrackerActor), null)
-
-    objectTrackerActor.tell(new AddListenerEvent(lookAtOmNomResponse), null)
-    movementActor.tell(new AddListenerEvent(lookAtOmNomResponse), null)
+    //visionActor.tell(new AddListenerEvent(lookAtOmNomResponse), null)
+    //movementActor.tell(new AddListenerEvent(lookAtOmNomResponse), null)
 
     movementActor.tell(new AddListenerEvent(movementPublisherSink), null)
     telemetryActor.tell(new AddListenerEvent(telemetryPublisherSink), null)
     visionActor.tell(new AddListenerEvent(visionPublisherSink), null)
+    plcActor.tell(new AddListenerEvent(dalekResponse), null)
+
+    //visionActor.tell(new AddListenerEvent(sceneDebugActor), null)
 
   }
 

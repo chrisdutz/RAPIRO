@@ -12,6 +12,9 @@ public class Scene implements Serializable {
 
     private Block[] blocks;
 
+    private int width;
+    private int height;
+
     public Calendar getTime() {
         return time;
     }
@@ -28,4 +31,19 @@ public class Scene implements Serializable {
         this.blocks = blocks;
     }
 
+    public int getWidth() {
+        return width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
 }

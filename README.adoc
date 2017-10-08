@@ -78,3 +78,24 @@ https://www.hackster.io/fvdbosch/uart-for-serial-console-or-hat-on-raspberry-pi-
 
 Setting up WiFi Accesspoint
 https://frillip.com/using-your-raspberry-pi-3-as-a-wifi-access-point-with-hostapd/
+
+
+
+# Building OpenCV
+
+cmake -D CMAKE_BUILD_TYPE=RELEASE \
+        -D WITH_OPENCL=OFF \
+        -D BUILD_PERF_TESTS=OFF \
+        -D BUILD_SHARED_LIBS=OFF \
+        -D JAVA_INCLUDE_PATH=$JAVA_HOME/include \
+        -D JAVA_AWT_LIBRARY=$JAVA_HOME/jre/lib/arm/libawt.so \
+        -D JAVA_JVM_LIBRARY=$JAVA_HOME/jre/lib/arm/server/libjvm.so \
+        -D DOPENCV_EXTRA_MODULES_PATH=../../opencv_contrib-3.3.0/modules \
+        -D CMAKE_INSTALL_PREFIX=/usr/local \
+        ..
+make
+sudo make install
+
+Enable camera:
+
+    sudo modprobe bcm2835-v4l2

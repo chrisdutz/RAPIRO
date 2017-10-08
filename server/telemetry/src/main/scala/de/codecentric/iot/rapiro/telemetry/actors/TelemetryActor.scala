@@ -26,7 +26,7 @@ class TelemetryActor extends Actor with LazyLogging with InitializingBean {
   var pid: Long = sigar.getPid
 
   override def afterPropertiesSet(): Unit = {
-    context.system.scheduler.schedule(5 seconds, 1 seconds, self, new UpdateEvent())
+    context.system.scheduler.schedule(5.seconds, 1.seconds, self, new UpdateEvent())
     logger.info("Scheduled TelemetryActor")
   }
 

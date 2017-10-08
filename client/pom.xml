@@ -48,6 +48,9 @@
                         <goals>
                             <goal>package-air</goal>
                         </goals>
+                        <configuration>
+                            <timestampServerUrl>http://sha1timestamp.ws.symantec.com/sha1/timestamp</timestampServerUrl>
+                        </configuration>
                     </execution>
                     <!--
                         Packaging for Android

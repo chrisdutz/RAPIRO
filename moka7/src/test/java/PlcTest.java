@@ -377,7 +377,7 @@ public class PlcTest {
         System.out.println("Usage");
         System.out.println("  client <IP> [Rack=0 Slot=2]");
         System.out.println("Example");
-        System.out.println("  client 192.168.1.101 0 2");
+        System.out.println("  client 192.168.0.1 0 0");
         System.out.println("or");
         System.out.println("  client 192.168.1.101");
     }

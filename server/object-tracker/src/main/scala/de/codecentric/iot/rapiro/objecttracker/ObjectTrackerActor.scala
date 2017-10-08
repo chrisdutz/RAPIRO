@@ -49,16 +49,19 @@ class ObjectTrackerActor extends Actor with LazyLogging {
 
   def getProcessedScene:Scene = {
     var mergedBlocks: List[Block] = List[Block]()
+    val newScene: Scene = new Scene()
     lastScenes.foreach(scene => {
       if(scene.getBlocks != null) {
         scene.getBlocks.foreach(block => {
           mergedBlocks = new BlockMerger().mergeBlocks(block, mergedBlocks)
         })
       }
+      newScene.setWidth(scene.getWidth)
+      newScene.setHeight(scene.getHeight)
+      newScene.setTime(scene.getTime)
     })
-    val scene: Scene = new Scene()
-    scene.setBlocks((mergedBlocks map(block => block)).toArray)
-    scene
+    newScene.setBlocks((mergedBlocks map(block => block)).toArray)
+    newScene
   }
 
 }

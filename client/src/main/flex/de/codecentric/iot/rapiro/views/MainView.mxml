@@ -169,10 +169,20 @@
                     var rect:Rect = new Rect();
                     rect.stroke = new SolidColorStroke(0x000000);
                     rect.fill = new SolidColor(0x00FF00);
-                    rect.x = block.x - (block.width / 2);
-                    rect.y = block.y - (block.height / 2);
-                    rect.width = block.width;
-                    rect.height = block.height;
+
+                    var horizontalScale:Number = vision.width / scene.width;
+                    var verticalScale:Number = vision.height / scene.height;
+
+                    var topX:Number = ((block.x - (block.width / 2)) * horizontalScale);
+                    var leftY:Number = ((block.y - (block.height / 2)) * verticalScale);
+                    var width:Number = block.width * horizontalScale;
+                    var height:Number = block.height * verticalScale;
+
+                    rect.x = topX;
+                    rect.y = leftY;
+                    rect.width = width;
+                    rect.height = height;
+
                     vision.addElement(rect);
                 }
             }

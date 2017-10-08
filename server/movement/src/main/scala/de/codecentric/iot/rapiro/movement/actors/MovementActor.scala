@@ -30,7 +30,7 @@ class MovementActor extends Actor with LazyLogging with InitializingBean {
   var listeners: List[ActorRef] = List[ActorRef]()
 
   override def afterPropertiesSet(): Unit = {
-    context.system.scheduler.schedule(5 seconds, 500 millis, self, new UpdateEvent())
+    context.system.scheduler.schedule(5.seconds, 500.millis, self, new UpdateEvent())
     logger.info("Scheduled MovementActor")
   }
 
