@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009"
+        xmlns:s="library://ns.adobe.com/flex/spark"
+        xmlns:parsley="http://www.spicefactory.org/parsley">
+
+  <fx:Declarations>
+    <parsley:FastInject>
+      <parsley:Inject property="channelSet" type="{ChannelSet}" />
+    </parsley:FastInject>
+
+    <s:RemoteObject id="voiceService"
+                    destination="voiceService"
+                    channelSet="{channelSet}"
+                    fault="onFault(event)">
+      <s:method name="play" result="onResult(event)"/>
+      <s:method name="stop" result="onResult(event)"/>
+    </s:RemoteObject>
+  </fx:Declarations>
+
+  <fx:Script>
+    <![CDATA[
+    import mx.messaging.ChannelSet;
+    import mx.rpc.events.FaultEvent;
+    import mx.rpc.events.ResultEvent;
+
+    [Bindable]
+    public var channelSet:ChannelSet;
+
+    protected function onResult(event:ResultEvent):void {
+      trace("Result: " + event);
+    }
+
+    protected function onFault(event:FaultEvent):void {
+      trace("Fault: " + event);
+    }
+
+    protected function onStartSingingClick(event:MouseEvent):void {
+      voiceService.play("minions-banana.wav");
+    }
+
+    protected function onStopSingingClick(event:MouseEvent):void {
+      voiceService.stop();
+    }
+
+    ]]>
+  </fx:Script>
+
+  <s:VGroup width="100%">
+    <s:Button icon="@Embed('/voice_sing.png')" width="100%" click="onStartSingingClick(event)"/>
+    <s:Button icon="@Embed('/stop.png')" width="100%" click="onStopSingingClick(event)"/>
+  </s:VGroup>
+
+</s:View>

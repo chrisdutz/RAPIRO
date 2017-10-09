@@ -46,6 +46,11 @@ public class MovementService implements ApplicationListener<ContextRefreshedEven
         serialAdapter.send("#M2");
     }
 
+    public void setEyeColor(int red, int green, int blue) {
+        LOG.info("Movement: Eye Color");
+        serialAdapter.send("#PR" + String.format("%03d", red) + "G" + String.format("%03d", green) + "B" + String.format("%03d", blue) + "T010");
+    }
+
     public void turnHead(int value) {
         serialAdapter.send("#PS00A" + String.format("%03d", value) + "T010");
     }

@@ -1,0 +1,95 @@
+<?xml version="1.0"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009"
+        xmlns:s="library://ns.adobe.com/flex/spark"
+        xmlns:parsley="http://www.spicefactory.org/parsley">
+
+  <fx:Declarations>
+    <parsley:FastInject injectionComplete="init()">
+      <parsley:Inject property="channelSet" type="{ChannelSet}" />
+    </parsley:FastInject>
+
+    <s:Consumer id="visionEvents"
+                destination="visionEvents"
+                channelSet="{channelSet}"
+                fault="onMessageFault(event)"
+                message="onVisionEvent(event)"/>
+  </fx:Declarations>
+
+  <fx:Script>
+    <![CDATA[
+    import de.codecentric.iot.rapiro.vision.model.Block;
+    import de.codecentric.iot.rapiro.vision.model.Scene;
+
+    import mx.graphics.SolidColorStroke;
+    import mx.messaging.ChannelSet;
+
+    import mx.messaging.events.MessageEvent;
+    import mx.messaging.events.MessageFaultEvent;
+
+    import spark.primitives.Rect;
+
+    [Bindable]
+    public var channelSet:ChannelSet;
+
+    protected function init():void {
+      visionEvents.subscribe();
+    }
+
+    protected function onMessageFault(event:MessageFaultEvent):void {
+      trace("Fault: " + event);
+    }
+
+    protected function onVisionEvent(event:MessageEvent):void {
+      if (event.message.body is de.codecentric.iot.rapiro.vision.model.Scene) {
+        // Clear all boxes.
+        visualArea.removeAllElements();
+
+        // Add new boxes for each detected object.
+        var scene:de.codecentric.iot.rapiro.vision.model.Scene = de.codecentric.iot.rapiro.vision.model.Scene(event.message.body);
+
+        var sceneRatio:Number = scene.width / scene.height;
+        var screenRatio:Number = visualArea.width / visualArea.height;
+
+        // The scene is wider than the screen -> We use 100% width and less height.
+        var visualAreaWidth:Number;
+        var visualAreaHeight:Number;
+        if(sceneRatio > screenRatio) {
+          visualAreaWidth = visualArea.width;
+          visualAreaHeight = visualArea.width * sceneRatio;
+        }
+        // The screen is wider than the scene -> We use 100% height and less width.
+        else {
+          visualAreaWidth = visualArea.height * sceneRatio;
+          visualAreaHeight = visualArea.height;
+        }
+
+        var scale:Number = visualAreaWidth / scene.width;
+
+        for each(var block:Block in scene.blocks) {
+          var rect:Rect = new Rect();
+          rect.stroke = new SolidColorStroke(0x000000);
+
+          var topX:Number = ((block.x - (block.width / 2)) * scale);
+          var leftY:Number = ((block.y - (block.height / 2)) * scale);
+          var width:Number = block.width * scale;
+          var height:Number = block.height * scale;
+
+          rect.x = topX;
+          rect.y = leftY;
+          rect.width = width;
+          rect.height = height;
+
+          visualArea.addElement(rect);
+        }
+      }
+    }
+    ]]>
+  </fx:Script>
+
+  <s:Group id="visualArea" width="100%" height="100%">
+    <s:layout>
+      <s:BasicLayout/>
+    </s:layout>
+  </s:Group>
+
+</s:View>

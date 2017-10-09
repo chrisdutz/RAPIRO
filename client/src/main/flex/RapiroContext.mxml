@@ -3,11 +3,43 @@
   Created by christoferdutz on 08.09.15.
 -->
 <local:Object xmlns:fx="http://ns.adobe.com/mxml/2009"
-              xmlns:services="de.codecentric.iot.rapiro.services.*"
-              xmlns:local="*">
+              xmlns:s="library://ns.adobe.com/flex/spark"
+              xmlns:local="*"
+              xmlns:settings="de.codecentric.iot.rapiro.settings.*">
 
     <fx:Declarations>
-        <services:SettingsService/>
+        <s:ChannelSet id="channelSet">
+            <!--s:StreamingAMFChannel id="streamingChannel"
+                          connectTimeout="5"
+                          requestTimeout="5"
+                          url="http://localhost:8080/messagebroker/websocket-amf"/>
+            <s:AMFChannel id="longPollingChannel"
+                          pollingEnabled="true"
+                          piggybackingEnabled="true"
+                          pollingInterval="1000"
+                          url="http://localhost:8080/messagebroker/long-polling-amf"/>
+            <s:AMFChannel id="shortPollingChannel"
+                          pollingEnabled="true"
+                          piggybackingEnabled="true"
+                          pollingInterval="1000"
+                          url="http://localhost:8080/messagebroker/short-polling-amf"/-->
+            <s:StreamingAMFChannel id="streamingChannel"
+                                   connectTimeout="5"
+                                   requestTimeout="5"
+                                   url="{baseUrl}/messagebroker/websocket-amf"/>
+            <s:AMFChannel id="longPollingChannel"
+                          pollingEnabled="true"
+                          piggybackingEnabled="true"
+                          pollingInterval="1000"
+                          url="{baseUrl}/messagebroker/long-polling-amf"/>
+            <s:AMFChannel id="shortPollingChannel"
+                          pollingEnabled="true"
+                          piggybackingEnabled="true"
+                          pollingInterval="1000"
+                          url="{baseUrl}/messagebroker/short-polling-amf"/>
+        </s:ChannelSet>
+
+        <settings:SettingsService/>
     </fx:Declarations>
 
     <fx:Script>

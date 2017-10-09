@@ -33,8 +33,27 @@ public class DummySerialAdapter implements SerialAdapter {
     }
 
     @Override
+    public void addAsyncReader(AsyncReader asyncReader) {
+        asyncReader.dataAvailable();
+    }
+
+    @Override
     public void send(String command) {
         LOG.info("Sending: " + command);
+    }
+
+    @Override
+    public int bytesAvailable() {
+        return 100;
+    }
+
+    @Override
+    public byte peekByte() {
+        int peekPos = pos + 1;
+        if(pos == protocol.length - 1) {
+            peekPos = 0;
+        }
+        return protocol[peekPos];
     }
 
     @Override

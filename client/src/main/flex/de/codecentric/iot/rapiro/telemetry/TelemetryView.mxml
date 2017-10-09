@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009"
+        xmlns:s="library://ns.adobe.com/flex/spark"
+        xmlns:parsley="http://www.spicefactory.org/parsley">
+
+  <fx:Declarations>
+    <parsley:FastInject injectionComplete="init()">
+      <parsley:Inject property="channelSet" type="{ChannelSet}" />
+    </parsley:FastInject>
+
+    <s:Consumer id="telemetryEvents"
+                destination="telemetryEvents"
+                channelSet="{channelSet}"
+                fault="onMessageFault(event)"
+                message="onTelemetryEvent(event)"/>
+  </fx:Declarations>
+
+  <fx:Script>
+    <![CDATA[
+    import de.codecentric.iot.rapiro.telemetry.model.TelemetryData;
+
+    import mx.messaging.ChannelSet;
+
+    import mx.messaging.events.MessageEvent;
+    import mx.messaging.events.MessageFaultEvent;
+
+    [Bindable]
+    public var channelSet:ChannelSet;
+
+    [Bindable]
+    private var cpuLoad:Number;
+
+    protected function init():void {
+      telemetryEvents.subscribe();
+    }
+
+    protected function onTelemetryEvent(event:MessageEvent):void {
+      if (event.message.body is TelemetryData) {
+        cpuLoad = Math.round(TelemetryData(event.message.body).cpuLoad * 100);
+      }
+    }
+
+    protected function onMessageFault(event:MessageFaultEvent):void {
+      trace("Fault: " + event);
+    }
+
+    ]]>
+  </fx:Script>
+
+  <s:Label text="{cpuLoad}"/>
+
+</s:View>

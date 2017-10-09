@@ -23,9 +23,9 @@ class StreamConfiguration extends InitializingBean {
     //val sceneDebugActor = actorSystem.actorOf(Props[SceneDebugActor], "sceneDebugActor")
 
     // Create all the actors used in this application.
-    val movementActor: ActorRef = actorSystem.actorOf(
+    /*val movementActor: ActorRef = actorSystem.actorOf(
       SpringExtension.SpringExtProvider.get(actorSystem).props("movementActor")
-    )
+    )*/
     val plcActor: ActorRef = actorSystem.actorOf(
       SpringExtension.SpringExtProvider.get(actorSystem).props("plcActor")
     )
@@ -66,7 +66,7 @@ class StreamConfiguration extends InitializingBean {
     //visionActor.tell(new AddListenerEvent(lookAtOmNomResponse), null)
     //movementActor.tell(new AddListenerEvent(lookAtOmNomResponse), null)
 
-    movementActor.tell(new AddListenerEvent(movementPublisherSink), null)
+    //movementActor.tell(new AddListenerEvent(movementPublisherSink), null)
     plcActor.tell(new AddListenerEvent(plcPublisherSink), null)
     plcActor.tell(new AddListenerEvent(dalekResponse), null)
     telemetryActor.tell(new AddListenerEvent(telemetryPublisherSink), null)

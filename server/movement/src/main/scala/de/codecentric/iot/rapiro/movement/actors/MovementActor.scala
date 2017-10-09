@@ -3,34 +3,34 @@ package de.codecentric.iot.rapiro.movement.actors
 import java.util.Calendar
 
 import akka.actor.{Actor, ActorRef}
-import de.codecentric.iot.rapiro.akka.events.{AddListenerEvent, RemoveListenerEvent, UpdateEvent}
-import de.codecentric.iot.rapiro.movement.actors.MovementActor.UpdateMovementState
-import de.codecentric.iot.rapiro.movement.adapter.SerialAdapter
+import de.codecentric.iot.rapiro.akka.events.{AddListenerEvent, RemoveListenerEvent}
+import de.codecentric.iot.rapiro.movement.adapter.{AsyncReader, SerialAdapter}
 import de.codecentric.iot.rapiro.movement.model.MovementState
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
-
-import scala.annotation.tailrec
-import scala.concurrent.duration.DurationInt
 import com.typesafe.scalalogging._
 import de.codecentric.iot.rapiro.akka.ItemEvent
+import de.codecentric.iot.rapiro.movement.actors.MovementActor.UpdateMovementState
 
 /**
   * Created by christoferdutz on 19.10.16.
   */
 @Scope("prototype")
 @Component("movementActor")
-class MovementActor extends Actor with LazyLogging with InitializingBean {
-  import context.dispatcher
+class MovementActor extends Actor with LazyLogging with InitializingBean with AsyncReader {
 
   @Autowired private val serialAdapter:SerialAdapter = null
 
+  val SIZE_ARDUINO_FRAME:Int = 2 /* Header */ + 24 /* Servo positions */ + 6 /* Eye colors */ + 2 /* IR Distance */
+
   var listeners: List[ActorRef] = List[ActorRef]()
 
+  var curMovementState:MovementState = _
+
   override def afterPropertiesSet(): Unit = {
-    context.system.scheduler.schedule(5.seconds, 500.millis, self, new UpdateEvent())
+    serialAdapter.addAsyncReader(this)
     logger.info("Scheduled MovementActor")
   }
 
@@ -39,72 +39,48 @@ class MovementActor extends Actor with LazyLogging with InitializingBean {
       listeners = event.getActorRef :: listeners
     case event:RemoveListenerEvent =>
       listeners = listeners.filter(_ == event.getActorRef)
-    case _:UpdateEvent =>
-      try {
-        if (listeners.nonEmpty) {
-          val updateMovementState: UpdateMovementState = UpdateMovementState(getMovementState)
-          listeners.foreach(target => target ! updateMovementState)
+  }
+
+  override def dataAvailable(): Unit = {
+    // Read in all the data till the first 0xFF is read.
+    while(serialAdapter.peekByte() != 0xFF && serialAdapter.peekByte() != -1) {
+      serialAdapter.readByte()
+    }
+    if(serialAdapter.bytesAvailable() >= SIZE_ARDUINO_FRAME) {
+      // The header of a Arduino frame is two 0xFF bytes.
+      if(serialAdapter.readByte() == 0xFF) {
+        if(serialAdapter.readByte() == 0xFF) {
+          // After that come the 12 positions of the servos
+          val positions: Array[Int] = new Array[Int](12)
+          for(i <- 0 to 11) {
+            val servoPosition:Int = serialAdapter.readWord
+            positions(i) = servoPosition
+          }
+          // After that come the 3 colors of the eyes
+          val eyeColors: Array[Int] = new Array[Int](3)
+          for(i <- 0 to 2) {
+            val eyeColor:Int = serialAdapter.readWord
+            eyeColors(i) = eyeColor
+          }
+          // Finally the distance the distance sensor is producing
+          val irDistance:Int = serialAdapter.readWord
+
+          if (listeners.nonEmpty) {
+            // Assemble a new movement state object
+            val movementState: MovementState = new MovementState()
+            movementState.setTime(Calendar.getInstance())
+            movementState.setServoPositions(positions)
+            movementState.setEyeColors(eyeColors)
+            movementState.setIrDistance(irDistance)
+
+            val updateMovementState: UpdateMovementState = UpdateMovementState(movementState)
+            listeners.foreach(target => target ! updateMovementState)
+          }
+
         }
-      } catch {
-        case e: Exception => logger.error("An error occurred while processing incoming update event.", e)
       }
-  }
-
-  def getMovementState: MovementState = {
-    arduinoProtocol(BEFORE_FRAME)
-  }
-
-  @tailrec private def arduinoProtocol(state: MovementActorState): MovementState = {
-    state match {
-      case BEFORE_FRAME =>
-        var curByte: Byte = 0
-        // Start reading bytes until we read the start byte.
-        do {
-          curByte = serialAdapter.readByte
-        } while (curByte != 0xFF.toByte)
-
-        // Continue if we read the start byte.
-        if(curByte == 0xFF.toByte) {
-          arduinoProtocol(FIRST_FF_BYTE_READ)
-        }
-        // Abort if the start byte wasn't read after at least 100 bytes.
-        else {
-          logger.debug("Giving up trying to find start of frame.")
-          null
-        }
-      case FIRST_FF_BYTE_READ =>
-        if (serialAdapter.readByte == 0xFF.toByte)
-          arduinoProtocol(HEADER_READ)
-        else
-          arduinoProtocol(BEFORE_FRAME)
-      case HEADER_READ =>
-        val positions: Array[Int] = new Array[Int](12)
-        for(i <- 0 to 11) {
-          val servoPosition:Int = serialAdapter.readWord
-          positions(i) = servoPosition
-        }
-        val eyeColors: Array[Int] = new Array[Int](3)
-        for(i <- 0 to 2) {
-          val eyeColor:Int = serialAdapter.readWord
-          eyeColors(i) = eyeColor
-        }
-        val irDistance:Int = serialAdapter.readWord
-
-        val movementState: MovementState = new MovementState()
-        movementState.setTime(Calendar.getInstance())
-        movementState.setServoPositions(positions)
-        movementState.setEyeColors(eyeColors)
-        movementState.setIrDistance(irDistance)
-        movementState
     }
   }
-
-
-  sealed abstract class MovementActorState
-  case object BEFORE_FRAME extends MovementActorState
-  case object FIRST_FF_BYTE_READ extends MovementActorState
-  case object HEADER_READ extends MovementActorState
-
 }
 
 object MovementActor {

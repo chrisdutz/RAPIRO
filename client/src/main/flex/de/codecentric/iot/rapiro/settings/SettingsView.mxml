@@ -24,7 +24,7 @@
 
     <fx:Script>
         <![CDATA[
-        import de.codecentric.iot.rapiro.services.SettingsService;
+        import de.codecentric.iot.rapiro.settings.SettingsService;
 
         import mx.events.FlexEvent;
         import mx.logging.ILogger;

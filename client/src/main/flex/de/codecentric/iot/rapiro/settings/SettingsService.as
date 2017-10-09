@@ -1,7 +1,7 @@
 /**
  * Created by christoferdutz on 23.03.16.
  */
-package de.codecentric.iot.rapiro.services {
+package de.codecentric.iot.rapiro.settings {
 public class SettingsService {
     
     private var _selectedLanguage:String;

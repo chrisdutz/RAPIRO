@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009"
+        xmlns:s="library://ns.adobe.com/flex/spark"
+        xmlns:parsley="http://www.spicefactory.org/parsley">
+
+  <fx:Declarations>
+    <parsley:FastInject injectionComplete="init()">
+      <parsley:Inject property="channelSet" type="{ChannelSet}" />
+    </parsley:FastInject>
+
+    <s:RemoteObject id="movementService"
+                    destination="movementService"
+                    channelSet="{channelSet}"
+                    fault="onFault(event)">
+      <s:method name="stop" result="onResult(event)"/>
+      <s:method name="moveForward" result="onResult(event)"/>
+      <s:method name="moveLeft" result="onResult(event)"/>
+      <s:method name="moveRight" result="onResult(event)"/>
+      <s:method name="moveBack" result="onResult(event)"/>
+    </s:RemoteObject>
+
+    <s:Consumer id="movementEvents"
+                destination="movementEvents"
+                channelSet="{channelSet}"
+                fault="onMessageFault(event)"
+                message="onPositionEvent(event)"/>
+  </fx:Declarations>
+
+  <fx:Script>
+    <![CDATA[
+    import de.codecentric.iot.rapiro.movement.model.MovementState;
+
+    import mx.events.FlexEvent;
+    import mx.messaging.ChannelSet;
+    import mx.messaging.events.MessageEvent;
+    import mx.messaging.events.MessageFaultEvent;
+    import mx.rpc.events.FaultEvent;
+    import mx.rpc.events.ResultEvent;
+
+    [Bindable]
+    public var channelSet:ChannelSet;
+
+    protected function init():void {
+      movementEvents.subscribe();
+    }
+
+    protected function onResult(event:ResultEvent):void {
+      trace("Result: " + event);
+    }
+
+    protected function onFault(event:FaultEvent):void {
+      trace("Fault: " + event);
+    }
+
+    protected function onMessageFault(event:MessageFaultEvent):void {
+      trace("Fault: " + event);
+    }
+
+    protected function onForwardClick(event:MouseEvent):void {
+      movementService.moveForward();
+    }
+
+    protected function onLeftClick(event:MouseEvent):void {
+      movementService.moveLeft();
+    }
+
+    protected function onRightClick(event:MouseEvent):void {
+      movementService.moveRight();
+    }
+
+    protected function onBackClick(event:MouseEvent):void {
+      movementService.moveBack();
+    }
+
+    protected function onStopClick(event:MouseEvent):void {
+      movementService.stop();
+    }
+
+    protected function onPowerDownClick(event:MouseEvent):void {
+      movementService.powerDown();
+    }
+
+    protected function onPositionEvent(event:MessageEvent):void {
+      if (event.message.body is MovementState) {
+        trace(event.message.body);
+      }
+    }
+
+    ]]>
+  </fx:Script>
+
+  <s:VGroup width="100%" height="100%" horizontalAlign="center" padding="40">
+    <s:VGroup width="100%" height="100%" horizontalAlign="center" padding="20">
+      <s:Button icon="@Embed('/movement_up.png')" width="128" height="128" click="onForwardClick(event)"/>
+      <s:HGroup>
+        <s:Button icon="@Embed('/movement_left.png')" width="128" height="128" click="onLeftClick(event)"/>
+        <s:Button icon="@Embed('/stop.png')" width="128" height="128" click="onStopClick(event)"/>
+        <s:Button icon="@Embed('/movement_right.png')" width="128" height="128" click="onRightClick(event)"/>
+      </s:HGroup>
+      <s:Button icon="@Embed('/movement_down.png')" width="128" height="128" click="onBackClick(event)"/>
+    </s:VGroup>
+    <s:Button icon="@Embed('/movement_power.png')" width="100%" height="128" click="onPowerDownClick(event)"/>
+  </s:VGroup>
+</s:View>
